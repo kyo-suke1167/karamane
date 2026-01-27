@@ -60,4 +60,3 @@ Prisma v7 で PostgreSQL を使うための「アダプター構成」に必要�
 ```bash
 npm install dotenv pg @prisma/adapter-pg
 npm install -D @types/pg
-# (既にインストール済みの prisma, @prisma/client はそのままでOK)

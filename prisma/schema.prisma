@@ -7,6 +7,12 @@ datasource db {
   provider = "postgresql"
 }
 
+enum SongStatus {
+  PRACTICING // 練習中
+  LEARNED    // 持ち歌 (デフォルト)
+  MASTERED   // 十八番
+}
+
 // ユーザー
 model User {
   id            String    @id @default(cuid())
@@ -42,6 +48,8 @@ model Song {
 
   userId        String    @map("user_id")
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status    SongStatus @default(LEARNED)
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
