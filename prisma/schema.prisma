@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+  // output = "../src/generated/prisma" // 一旦デフォルトの出力先を試す
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ユーザー
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String?
+  image         String?
+  
+  // 自分の音域（ノートナンバー）
+  minNoteId     Int?      @map("min_note_id") 
+  maxNoteId     Int?      @map("max_note_id")
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  songs         Song[]
+  
+  @@map("users")
+}
+
+// 持ち歌
+model Song {
+  id            Int       @id @default(autoincrement())
+  
+  title         String
+  artist        String
+  memo          String?
+  youtubeUrl    String?   @map("youtube_url")
+
+  // 曲の音域
+  minNoteId     Int?      @map("min_note_id")
+  maxNoteId     Int?      @map("max_note_id")
+
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("songs")
+}
