@@ -52,11 +52,18 @@ export default async function Home() {
               >
                 <div className="flex flex-wrap justify-between items-center gap-2 mb-2 border-b border-gray-200/50 pb-2">
                   {/* ステータス */}
+                  <div className="flex gap-2">
                   <span
-                    className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusStyle.badgeColor}`}
+                    className={`inline-flex items-center gap-1 text-[12px] font-bold px-2 py-0.5 rounded-full border ${statusStyle.badgeColor}`}
                   >
                     {statusStyle.icon} {statusStyle.label}
                   </span>
+                  {song.key !== 0 && (
+                    <span className="text-xs font-mono font-bold bg-gray-100 text-gray-600 px-2 py-1 rounded ml-2 whitespace-nowrap">
+                      キー設定: {song.key > 0 ? `+${song.key}` : song.key}
+                    </span>
+                  )}
+                </div>
 
                   <div className="flex gap-2">
                     {/* 最高音 */}

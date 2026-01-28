@@ -157,6 +157,20 @@ export default function CreateSongPage() {
           </div>
         )}
 
+        {/* メモ入力 */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            メモ (気づいたことなど)
+          </label>
+          <textarea
+            name="memo"
+            rows={4}
+            placeholder="例: サビのファルセットがきつい。2番の歌詞間違えやすい。"
+            className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none resize-none"
+          />
+        </div>
+
+        {/* ボタンエリア */}
         <div className="flex justify-end gap-3 pt-4">
           <Link 
             href="/" 
