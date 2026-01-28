@@ -110,7 +110,7 @@ export default async function SongDetailPage({ params }: Props) {
           {/* キーコントローラー */}
           <div>
             <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
-              Current Key
+              Custom Key
             </h2>
             <KeyController
               songId={song.id}
@@ -138,7 +138,6 @@ export default async function SongDetailPage({ params }: Props) {
           <div className="border-t border-gray-100 pt-6 flex flex-col gap-2 text-sm text-gray-400">
             <p>登録ユーザー: {song.user?.name}</p>
             <p>登録日: {song.createdAt.toLocaleDateString()}</p>
-            <p>ID: {song.id}</p>
           </div>
 
           {/* 編集ボタンエリア */}
