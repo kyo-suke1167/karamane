@@ -142,3 +142,34 @@ export async function checkEmail(email: string) {
   });
   return !!existingUser;
 }
+
+export async function updateProfile(formData: FormData) {
+  const session = await getServerSession(authOptions);
+
+  if (!session || !session.user) {
+    throw new Error("ログインしていないと変更できません！");
+  }
+
+  const userId = (session.user as any).id;
+  const name = formData.get("name") as string;
+  const minNoteId = Number(formData.get("minNoteId"));
+  const maxNoteId = Number(formData.get("maxNoteId"));
+
+  if (!name) {
+    throw new Error("名前は必須です");
+  }
+
+  if (minNoteId > maxNoteId) {
+    throw new Error("音域が逆転しています");
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      name,
+      minNoteId,
+      maxNoteId,
+    },
+  });
+
+}

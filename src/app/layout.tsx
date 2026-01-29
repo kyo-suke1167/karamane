@@ -4,23 +4,38 @@ import "./globals.css";
 import Header from "../components/Header";
 import { Providers } from "@/components/Providers";
 
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Karamane - 持ち歌&キー管理アプリ",
-  description: "カラオケの持ち歌をキー情報などと共に管理できるアプリ",
+  title: "KARAMANE",
+  description: "持ち歌管理アプリ",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  const session = await getServerSession(authOptions);
+  
+  let currentUser = null;
+  if (session?.user) {
+    currentUser = await prisma.user.findUnique({
+      where: { id: (session.user as any).id },
+      select: { name: true, image: true }
+    });
+  }
+
   return (
     <html lang="ja">
       <body className={`${inter.className} bg-gray-50 text-gray-800`}>
         <Providers>
-          <Header />
+          <Header currentUser={currentUser}/>
           <main className="max-w-4xl mx-auto p-4 min-h-[calc(100vh-64px)]">
             {children}
           </main>

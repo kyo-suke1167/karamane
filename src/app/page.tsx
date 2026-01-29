@@ -68,13 +68,13 @@ export default async function Home() {
 
   // 自分のデータだけを検索 (where: { userId })
   const songs = await prisma.song.findMany({
-    where: { 
-      userId: userId 
-    },
+    where: { userId: userId },
     orderBy: { createdAt: "desc" },
-    include: {
-      user: true,
-    },
+    include: {user: true,},
+  });
+
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
   });
 
   return (
@@ -83,7 +83,7 @@ export default async function Home() {
       <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6 border-b border-gray-100 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            {session.user.name}さんの持ち歌
+            {user?.name}さんの持ち歌
           </h2>
           <p className="text-gray-500 text-sm mt-1 font-bold">
             全 {songs.length} 曲
