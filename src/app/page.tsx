@@ -15,7 +15,6 @@ export default async function Home() {
   if (!session || !session.user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-6">
-        <div className="bg-amber-100 p-4 rounded-full mb-6 text-4xl">(^_^)</div>
         <h1 className="text-4xl font-black text-gray-800 mb-4 tracking-tight">
           KARAMANE
         </h1>
@@ -80,7 +79,7 @@ export default async function Home() {
   return (
     <div className="max-w-4xl mx-auto py-6 px-4">
       {/* ヘッダーエリア */}
-      <div className="flex flex-col sm:flex-row justify-between items-end gap-4 mb-6 border-b border-gray-100 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 border-b border-gray-100 pb-4">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             {user?.name}さんの持ち歌
@@ -91,7 +90,7 @@ export default async function Home() {
         </div>
 
         <div className="flex gap-2 w-full sm:w-auto">
-          {/* ※検索機能はまだ見た目だけ！後で実装！ */}
+          {/* ※検索機能は後で実装予定 */}
           <input
             type="text"
             placeholder="曲名で検索..."
