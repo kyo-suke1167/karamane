@@ -5,18 +5,20 @@ export function getNoteName(noteId: number | null): string {
     return "?";
   }
 
-  // MIDIノート番号からオクターブと音階を計算
-  const octave = Math.floor(noteId / 12) - 1;
   const noteIndex = noteId % 12;
   const note = NOTE_NAMES[noteIndex];
 
+  const karaokeOctave = Math.floor((noteId - 9) / 12);
+
   let prefix = "";
 
-  if (octave <= 2) prefix = "low";       // 36~47: lowC ~ lowB (バリサク・チェロ域)
-  else if (octave === 3) prefix = "mid1"; // 48~59: mid1C ~ mid1B (男性平均)
-  else if (octave === 4) prefix = "mid2"; // 60~71: mid2C ~ mid2B (女性平均・男性高音)
-  else if (octave === 5) prefix = "hi";   // 72~83: hiC ~ hiB (サビの高音)
-  else if (octave >= 6) prefix = "hihi";  // 84~  : hihiC ~ (超高音・ホイッスル)
+  // A4(69) -> (69-9)/12 = 5 -> hi
+  // G#4(68) -> (68-9)/12 = 4 -> mid2
+  if (karaokeOctave <= 2) prefix = "low";       // ~ G#2
+  else if (karaokeOctave === 3) prefix = "mid1"; // A2 ~ G#3
+  else if (karaokeOctave === 4) prefix = "mid2"; // A3 ~ G#4
+  else if (karaokeOctave === 5) prefix = "hi";   // A4 ~ G#5 (サビ高音)
+  else if (karaokeOctave >= 6) prefix = "hihi";  // A5 ~     (超高音)
 
   return `${prefix}${note}`;
 }
@@ -26,19 +28,22 @@ export function getNoteColor(noteId: number | null): string {
     return "bg-gray-100 text-gray-500";
   }
 
-  if (noteId >= 84) return "bg-pink-100 text-pink-800 border-pink-200";     // hihi (超高音)
-  if (noteId >= 72) return "bg-orange-100 text-orange-800 border-orange-200"; // hi (高音)
-  if (noteId >= 60) return "bg-green-100 text-green-800 border-green-200";   // mid2 (中高音)
-  if (noteId >= 48) return "bg-blue-100 text-blue-800 border-blue-200";     // mid1 (中低音)
-  return "bg-purple-100 text-purple-800 border-purple-200";                 // low (低音)
+  // hihiA (81) ~
+  if (noteId >= 81) return "bg-pink-100 text-pink-800 border-pink-200";
+  // hiA (69) ~
+  if (noteId >= 69) return "bg-orange-100 text-orange-800 border-orange-200";
+  // mid2A (57) ~
+  if (noteId >= 57) return "bg-green-100 text-green-800 border-green-200";
+  // mid1A (45) ~
+  if (noteId >= 45) return "bg-blue-100 text-blue-800 border-blue-200";
+  
+  // それ以下 (low)
+  return "bg-purple-100 text-purple-800 border-purple-200";
 }
 
 // NOTE_OPTIONS 生成ロジック
-// Start: 36 (lowC / C2)
-// End:   87 (hihiD# / D#6)
-// Count: 60個分
-export const NOTE_OPTIONS = Array.from({ length: 52 }, (_, i) => {
-  const id = i + 36; // 36スタート (lowC)
+export const NOTE_OPTIONS = Array.from({ length: 60 }, (_, i) => {
+  const id = i + 33; // 33(lowA) スタート
   return {
     id: id,
     label: `${getNoteName(id)} (${id})`,
