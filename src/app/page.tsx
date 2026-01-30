@@ -15,7 +15,7 @@ export default async function Home() {
   if (!session || !session.user) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] text-center p-6">
-        <div className="bg-amber-100 p-4 rounded-full mb-6 text-4xl">🦁</div>
+        <div className="bg-amber-100 p-4 rounded-full mb-6 text-4xl">(^_^)</div>
         <h1 className="text-4xl font-black text-gray-800 mb-4 tracking-tight">
           KARAMANE
         </h1>
