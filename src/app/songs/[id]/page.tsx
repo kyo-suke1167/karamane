@@ -6,20 +6,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import KeyController from "@/components/KeyController";
 
+// 追加: セッション情報を取得するためのインポート
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth"; 
+
 type Props = {
   params: Promise<{ id: string }>;
 };
 
 export default async function SongDetailPage({ params }: Props) {
   const { id } = await params;
-
   const songId = Number(id);
 
-  // 数値でないIDが来たら 404 にする
   if (isNaN(songId)) {
     return notFound();
   }
 
+  // 1. 曲データを取得
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: { user: true },
@@ -29,11 +32,20 @@ export default async function SongDetailPage({ params }: Props) {
     return notFound();
   }
 
+  // 2. セッションから「ログイン中のユーザー」を取得
+  const session = await getServerSession(authOptions);
+  
+  let currentUser = null;
+  
+  // セッションがあって、メアドが取れればDB検索
+  if (session?.user?.email) {
+    currentUser = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+  }
+
   const statusStyle = getStatusStyle(song.status);
   const videoId = getYouTubeId(song.youtubeUrl);
-  const currentUser = await prisma.user.findUnique({
-    where: { id: "user_1" },
-  });
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -94,7 +106,6 @@ export default async function SongDetailPage({ params }: Props) {
               />
             </div>
           ) : song.youtubeUrl ? (
-            // IDが取れなかった場合はリンクを表示するフォールバック
             <div className="bg-gray-100 rounded-xl p-4 text-center text-gray-500 text-sm break-all">
               <a
                 href={song.youtubeUrl}
