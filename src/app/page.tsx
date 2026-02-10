@@ -5,7 +5,7 @@ import { getStatusStyle } from "@/lib/statusUtils";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SortSelect } from "@/components/SortSelect";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 
 export default async function Home({
   searchParams,
