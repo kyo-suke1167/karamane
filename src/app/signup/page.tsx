@@ -98,7 +98,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-start justify-center">
       <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-lg border border-gray-100">
         {/* Step 1: 基本情報 */}
         {step === 1 && (

@@ -42,7 +42,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-start justify-center">
       <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-lg border border-gray-100">
         <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
           おかえりなさい！
