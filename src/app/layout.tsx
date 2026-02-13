@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "../components/Header";
+import Header from "@/components/Header";
+import { Footer } from "@/components/Footer";
 import { Providers } from "@/components/Providers";
 
 import { getServerSession } from "next-auth";
@@ -39,6 +40,7 @@ export default async function RootLayout({
           <main className="max-w-4xl mx-auto p-4 min-h-[calc(100vh-64px)]">
             {children}
           </main>
+          <Footer />
         </Providers>
       </body>
     </html>

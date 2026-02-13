@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
 
 type Props = {
   currentUser?: {
@@ -17,6 +18,11 @@ export default function Header({ currentUser }: Props) {
 
   // 表示名
   const displayName = currentUser?.name || session?.user?.name;
+
+  const pathname = usePathname();
+  const isSetlistDetail = /^\/setlists\/\d+$/.test(pathname);
+
+  if (isSetlistDetail) return null;
 
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-20">

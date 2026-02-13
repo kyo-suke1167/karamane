@@ -9,8 +9,10 @@ import {
   signupSchema, 
   songSchema, 
   profileSchema, 
+  setlistSchema,
   type SignupSchema,
-  type SongSchema 
+  type SongSchema,
+  type SetlistSchema
 } from "@/lib/schema";
 
 // ==========================================
@@ -130,5 +132,123 @@ export async function updateProfile(formData: FormData) {
   await prisma.user.update({
     where: { id: (session.user as any).id },
     data: parsed,
+  });
+}
+
+// ==========================================
+// 📂 セットリスト操作 (Create / Update / Delete)
+// ==========================================
+
+// 1. セットリスト作成
+export async function createSetlist(data: SetlistSchema) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  const parsed = setlistSchema.parse(data);
+
+  const setlist = await prisma.setlist.create({
+    data: {
+      title: parsed.title,
+      description: parsed.description,
+      userId: (session.user as any).id,
+    },
+  });
+
+  redirect(`/setlists/${setlist.id}`); // 作成したらその詳細ページへ
+}
+
+// 2. セットリスト情報更新 (タイトル・説明)
+export async function updateSetlist(id: number, data: SetlistSchema) {
+  const parsed = setlistSchema.parse(data);
+
+  await prisma.setlist.update({
+    where: { id },
+    data: parsed,
+  });
+
+  // リダイレクトはせず、今のページを更新
+}
+
+// 3. セットリスト削除
+export async function deleteSetlist(id: number) {
+  await prisma.setlist.delete({
+    where: { id },
+  });
+  redirect("/setlists");
+}
+
+// ==========================================
+// セットリストの中身操作 (Add / Remove / Reorder)
+// ==========================================
+
+// 4. 曲をセットリストに追加
+export async function addSongToSetlist(setlistId: number, songId: number) {
+  // 現在の最大 order (順番) を取得して、その次に追加する
+  const maxOrderEntry = await prisma.setlistEntry.findFirst({
+    where: { setlistId },
+    orderBy: { order: "desc" },
+  });
+
+  const nextOrder = maxOrderEntry ? maxOrderEntry.order + 1 : 0;
+
+  await prisma.setlistEntry.create({
+    data: {
+      setlistId,
+      songId,
+      order: nextOrder,
+    },
+  });
+}
+
+// 5. 曲をセットリストから削除
+export async function removeSongFromSetlist(entryId: number) {
+  await prisma.setlistEntry.delete({
+    where: { id: entryId },
+  });
+}
+
+// 6. 順番を並べ替え (ドラッグ＆ドロップ用)
+// items: { id: setlistEntryId, order: 新しい順番 } の配列を受け取る
+export async function reorderSetlist(items: { id: number; order: number }[]) {
+  // トランザクションで一気に更新！ (途中で失敗したら全部ロールバックされる)
+  await prisma.$transaction(
+    items.map((item) =>
+      prisma.setlistEntry.update({
+        where: { id: item.id },
+        data: { order: item.order },
+      })
+    )
+  );
+}
+
+// 7. 一括削除機能
+export async function removeSongsFromSetlist(entryIds: number[]) {
+  if (entryIds.length === 0) return;
+  
+  await prisma.setlistEntry.deleteMany({
+    where: { 
+      id: { in: entryIds }
+    },
+  });
+}
+
+// 8. 曲を一括でセットリストに追加
+export async function addSongsToSetlist(setlistId: number, songIds: number[]) {
+  if (songIds.length === 0) return;
+
+  // 現在の最大orderを取得
+  const maxOrderEntry = await prisma.setlistEntry.findFirst({
+    where: { setlistId },
+    orderBy: { order: "desc" },
+  });
+
+  const nextOrder = maxOrderEntry ? maxOrderEntry.order + 1 : 0;
+
+  await prisma.setlistEntry.createMany({
+    data: songIds.map((songId, index) => ({
+      setlistId,
+      songId,
+      order: nextOrder + index, // 順番をずらしながら登録
+    })),
   });
 }

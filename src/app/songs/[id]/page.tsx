@@ -6,17 +6,23 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import KeyController from "@/components/KeyController";
 
-// 追加: セッション情報を取得するためのインポート
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth"; 
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
-export default async function SongDetailPage({ params }: Props) {
+export default async function SongDetailPage({ params, searchParams }: Props) {
   const { id } = await params;
   const songId = Number(id);
+
+  const query = await searchParams;
+  // backUrl が指定されていればそれを、なければトップページ ("/") を使う
+  const backUrl = typeof query.backUrl === "string" ? query.backUrl : "/";
+  
+  const backLabel = backUrl.includes("/setlists") ? "セットリストに戻る" : "一覧に戻る";
 
   if (isNaN(songId)) {
     return notFound();
@@ -37,7 +43,6 @@ export default async function SongDetailPage({ params }: Props) {
   
   let currentUser = null;
   
-  // セッションがあって、メアドが取れればDB検索
   if (session?.user?.email) {
     currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -48,13 +53,16 @@ export default async function SongDetailPage({ params }: Props) {
   const videoId = getYouTubeId(song.youtubeUrl);
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl mx-auto pb-20"> {/* フッターとかぶらないようにpb-20追加 */}
       <div className="mb-6">
         <Link
-          href="/"
-          className="text-gray-500 hover:text-amber-500 transition flex items-center gap-1"
+          href={backUrl}
+          className="text-gray-500 hover:text-amber-500 transition flex items-center gap-1 font-bold"
         >
-          一覧に戻る
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+            <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
+          </svg>
+          {backLabel}
         </Link>
       </div>
 
@@ -70,16 +78,16 @@ export default async function SongDetailPage({ params }: Props) {
             </span>
 
             {/* 音域バッジ */}
-            <span
-              className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.maxNoteId)}`}
-            >
-              最高: {getNoteName(song.maxNoteId)}
-            </span>
-            <span
-              className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.minNoteId)}`}
-            >
-              最低: {getNoteName(song.minNoteId)}
-            </span>
+            {song.maxNoteId && (
+               <span className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.maxNoteId)}`}>
+                 最高: {getNoteName(song.maxNoteId)}
+               </span>
+            )}
+            {song.minNoteId && (
+               <span className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.minNoteId)}`}>
+                 最低: {getNoteName(song.minNoteId)}
+               </span>
+            )}
           </div>
 
           <h1 className="text-3xl font-bold text-gray-800 leading-tight">

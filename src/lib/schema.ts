@@ -74,3 +74,19 @@ export const profileSchema = z.object({
 });
 
 export type ProfileSchema = z.infer<typeof profileSchema>;
+
+// ==========================================
+// セットリスト (Setlist)
+// ==========================================
+export const setlistSchema = z.object({
+  title: z
+    .string()
+    .min(1, "セットリスト名は必須です")
+    .max(100, "セットリスト名は100文字以内で入力してください"),
+  description: z
+    .string()
+    .max(500, "説明は500文字以内で入力してください")
+    .optional(),
+});
+
+export type SetlistSchema = z.infer<typeof setlistSchema>;

@@ -1,3 +1,6 @@
+// ==========================================
+// 設定回り
+// ==========================================
 generator client {
   provider        = "prisma-client-js"
   output          = "../src/generated/prisma"
@@ -7,13 +10,18 @@ datasource db {
   provider = "postgresql"
 }
 
+// ==========================================
+// 定義 (Enums)
+// ==========================================
 enum SongStatus {
   PRACTICING // 練習中
   LEARNED    // 持ち歌 (デフォルト)
   MASTERED   // 十八番
 }
 
-// ユーザー
+// ==========================================
+// ユーザー (User)
+// ==========================================
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -28,12 +36,16 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
+  // リレーション (繋がり)
   songs         Song[]
-  
+  setlists      Setlist[] // セットリストへのリンク
+
   @@map("users")
 }
 
-// 持ち歌
+// ==========================================
+// 持ち歌 (Song)
+// ==========================================
 model Song {
   id            Int       @id @default(autoincrement())
   
@@ -46,14 +58,64 @@ model Song {
   minNoteId     Int?      @map("min_note_id")
   maxNoteId     Int?      @map("max_note_id")
 
+  // ステータス・キー設定
+  status        SongStatus @default(LEARNED)
+  key           Int        @default(0) // 設定キー (±0, +2, -3 など)
+
+  // 所有者情報
   userId        String    @map("user_id")
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  status    SongStatus @default(LEARNED)
-  key        Int      @default(0) // 設定キー (±0, +2, -3 など)
+  // リレーション (セットリストの中身へのリンク)
+  setlistEntries SetlistEntry[]
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   @@map("songs")
+}
+
+// ==========================================
+// セットリスト (箱)
+// ==========================================
+model Setlist {
+  id            Int       @id @default(autoincrement())
+  title         String    // セットリスト名 (例: "2026夏ライブ")
+  description   String?   // 説明 (例: "盛り上げ用リスト")
+  
+  // 作成者
+  userId        String    @map("user_id")
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // セットリストの中身 (曲と順番の情報)
+  entries       SetlistEntry[]
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  @@map("setlists")
+}
+
+// ==========================================
+// セットリストの中身 (曲 + 順番)
+// ==========================================
+model SetlistEntry {
+  id            Int       @id @default(autoincrement())
+
+  // どのセットリストか？
+  setlistId     Int       @map("setlist_id")
+  setlist       Setlist   @relation(fields: [setlistId], references: [id], onDelete: Cascade)
+
+  // どの曲か？
+  songId        Int       @map("song_id")
+  song          Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+
+  // 何番目か？
+  order         Int       
+
+  createdAt     DateTime  @default(now()) @map("created_at")
+  
+  // 検索を速くするためのインデックス
+  @@index([setlistId])
+  @@map("setlist_entries")
 }
