@@ -149,7 +149,7 @@ const CardContent = (
         ref={setNodeRef} 
         style={style} 
         onClick={() => onToggleSelect(entry.id)}
-        className="touch-none select-none cursor-pointer"
+        className="select-none cursor-pointer"
       >
         {CardContent}
       </div>
