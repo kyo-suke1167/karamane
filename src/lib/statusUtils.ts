@@ -1,4 +1,4 @@
-import { SongStatus } from "@/generated/prisma";
+import { SongStatus } from "@/types";
 
 export const STATUS_CONFIG = {
   [SongStatus.PRACTICING]: { 

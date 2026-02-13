@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SetlistDetail } from "@/components/SetlistDetail";
+import { SetlistDetail } from "@/components/setlist/SetlistDetail";
 import { notFound, redirect } from "next/navigation";
 
 export default async function SetlistDetailPage({
@@ -12,7 +12,7 @@ export default async function SetlistDetailPage({
   const session = await getServerSession(authOptions);
   if (!session || !session.user) redirect("/login");
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
   const { id } = await params;
   const setlistId = Number(id);
 

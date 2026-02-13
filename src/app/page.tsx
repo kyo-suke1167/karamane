@@ -68,7 +68,7 @@ export default async function Home({
   // =========================================================
 
   // ログイン中のユーザーIDを取得
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   // ソート順の決定ロジック
   const params = await searchParams;
