@@ -102,7 +102,7 @@ export default async function Home({
   });
 
   return (
-    <div className="max-w-4xl mx-auto py-6 px-4">
+    <div className="max-w-4xl mx-auto py-6 px-4 pb-20">
       {/* ヘッダーエリア */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6 border-b border-gray-100 pb-4">
         <div>
