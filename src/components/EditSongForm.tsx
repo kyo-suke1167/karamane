@@ -59,15 +59,15 @@ export default function EditSongForm({ song }: Props) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">今のレベル</label>
         <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-[:checked]:bg-blue-50 has-[:checked]:border-blue-300">
+          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 `has-checked:bg-blue-50` `has-checked:border-blue-300`">
             <input type="radio" name="status" value="PRACTICING" defaultChecked={song.status === "PRACTICING"} className="accent-blue-500" />
             <span>🔰 練習中</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-[:checked]:bg-green-50 has-[:checked]:border-green-300">
+          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-:checked:bg-green-50 has-:checked:border-green-300">
             <input type="radio" name="status" value="LEARNED" defaultChecked={song.status === "LEARNED"} className="accent-green-500" />
             <span>🎤 持ち歌</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-[:checked]:bg-amber-50 has-[:checked]:border-amber-300">
+          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-:checked:bg-amber-50 has-:checked:border-amber-300">
             <input type="radio" name="status" value="MASTERED" defaultChecked={song.status === "MASTERED"} className="accent-amber-500" />
             <span>👑 十八番</span>
           </label>

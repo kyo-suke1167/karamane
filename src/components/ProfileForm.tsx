@@ -42,8 +42,12 @@ export default function ProfileForm({ user }: Props) {
       
       // 3秒後にメッセージを消す演出
       setTimeout(() => setMessage(""), 3000);
-    } catch (err: any) {
-      setError(err.message || "更新に失敗しました...");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message || "更新に失敗しました...");
+      } else {
+        setError("予期せぬエラーが発生しました");
+      }
     } finally {
       setIsPending(false);
     }

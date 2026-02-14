@@ -8,7 +8,7 @@ export default async function SetlistsPage() {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) redirect("/login");
 
-  const userId = (session.user as any).id;
+  const userId = session.user.id;
 
   const setlists = await prisma.setlist.findMany({
     where: { userId },
