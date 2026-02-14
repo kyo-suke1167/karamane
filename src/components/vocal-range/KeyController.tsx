@@ -1,0 +1,207 @@
+"use client";
+
+import { useState, useRef } from "react";
+import { updateSongKey } from "@/app/actions";
+import VocalRangeBar from "./VocalRangeBar";
+
+type Props = {
+  songId: number;
+  initialKey: number;
+  songMax: number | null;
+  songMin: number | null;
+  userMax: number | null;
+  userMin: number | null;
+};
+
+export default function KeyController({
+  songId,
+  initialKey,
+  songMax,
+  songMin,
+  userMax,
+  userMin,
+}: Props) {
+  const [currentKey, setCurrentKey] = useState(initialKey);
+  
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 0. 無理ゲー判定
+  const isImpossible = (() => {
+    if (!userMax || !userMin || !songMax || !songMin) return false;
+    const userRange = userMax - userMin;
+    const songRange = songMax - songMin;
+    return songRange > userRange;
+  })();
+
+  // ヘルパー
+  const checkFitAbsolute = (totalShift: number) => {
+    if (!userMax || !userMin || !songMax || !songMin) return false;
+    const shiftedSongMax = songMax + totalShift; 
+    const shiftedSongMin = songMin + totalShift;
+    return shiftedSongMax <= userMax && shiftedSongMin >= userMin;
+  };
+
+  // 最適なキー調整量を探す
+  const findBestKeyAdjustment = (baseOctaveShift: number): number | null => {
+    if (checkFitAbsolute(baseOctaveShift + 0)) return 0;
+    for (let i = 1; i <= 7; i++) {
+      if (checkFitAbsolute(baseOctaveShift + i)) return i; 
+      if (checkFitAbsolute(baseOctaveShift - i)) return -i; 
+    }
+    return null;
+  };
+
+  // 各種判定
+  const isPerfect = checkFitAbsolute(currentKey);
+  const isOriginalKeyPerfect = checkFitAbsolute(0);
+  const adjNormal = findBestKeyAdjustment(0);
+  const adjDown   = findBestKeyAdjustment(-12);
+  const adjUp     = findBestKeyAdjustment(12);
+
+
+  // デバウンス処理
+  const handleKeyChange = (newKey: number) => {
+    setCurrentKey(newKey);
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    timerRef.current = setTimeout(async () => {
+      try {
+        await updateSongKey(songId, newKey);
+      } catch (e) {
+        console.error(e);
+        alert("キーの保存に失敗しました（通信エラー）"); 
+      } finally {
+        timerRef.current = null;
+      }
+    }, 1000);
+  };
+
+  const formatKey = (k: number) => (k > 0 ? `+${k}` : k === 0 ? "±0" : `${k}`);
+
+  return (
+    <div className="bg-amber-50 rounded-xl p-5 border border-amber-100 shadow-sm">
+      
+      {songMax && songMin ? (
+        <VocalRangeBar 
+          songMin={songMin}
+          songMax={songMax}
+          userMin={userMin}
+          userMax={userMax}
+          currentKey={currentKey}
+        />
+      ) : (
+        <div className="bg-white/50 h-16 rounded-lg flex items-center justify-center text-gray-400 text-xs mb-4 border border-amber-100">
+          音域データがありません
+        </div>
+      )}
+
+      {/* キー操作エリア */}
+      <div className="flex items-center justify-between mb-4 px-2">
+        <button
+          onClick={() => handleKeyChange(currentKey - 1)}
+          className="w-12 h-12 flex items-center justify-center bg-white border border-gray-200 rounded-full text-2xl text-gray-600 hover:bg-gray-50 active:scale-95 transition shadow-sm"
+        >
+          －
+        </button>
+
+        <div className="text-center min-w-20">
+          <div className={`text-4xl font-black font-mono tracking-tighter ${currentKey === 0 ? "text-gray-800" : "text-blue-600"}`}>
+            {formatKey(currentKey)}
+          </div>
+          <p className="text-xs text-gray-400 mt-1 font-bold">
+            キー設定
+          </p>
+        </div>
+
+        <button
+          onClick={() => handleKeyChange(currentKey + 1)}
+          className="w-12 h-12 flex items-center justify-center bg-white border border-gray-200 rounded-full text-2xl text-gray-600 hover:bg-gray-50 active:scale-95 transition shadow-sm"
+        >
+          ＋
+        </button>
+      </div>
+
+      {/* アドバイス表示エリア */}
+      <div className="space-y-2">
+        
+        {/* 0. 無理ゲー判定 */}
+        {isImpossible && (
+          <div className="flex items-start gap-3 bg-red-50 px-3 py-2 rounded-lg border-2 border-red-100 text-red-800">
+            <span className="text-xl">⚠️</span>
+            <div>
+              <p className="font-bold text-xs">音域が広すぎます...</p>
+              <p className="text-[10px] mt-0.5 opacity-80 leading-tight">
+                曲の音域幅が広すぎて、歌うのが難しい可能性があります。
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* 1. オク下提案 */}
+        {!isImpossible && !isOriginalKeyPerfect && adjDown !== null && (
+          <div className="flex items-center justify-between text-xs font-bold bg-blue-50 px-3 py-2 rounded-lg border-2 border-blue-200 text-blue-800 animate-in zoom-in">
+            <span className="flex items-center gap-1"><span className="text-sm">⬇️</span> オク下で歌うなら</span>
+            {adjDown === currentKey ? (
+               <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] border border-blue-200 min-w-27.5 text-center">今のキーでOK!</span>
+            ) : (
+              <button 
+                onClick={() => handleKeyChange(adjDown)}
+                className="bg-white px-3 py-1 rounded-full shadow-sm text-blue-600 font-bold hover:bg-blue-50 transition border border-blue-200 min-w-27.5"
+              >
+                キー {formatKey(adjDown)} にする
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 2. オク上提案 */}
+        {!isImpossible && !isOriginalKeyPerfect && adjUp !== null && (
+          <div className="flex items-center justify-between text-xs font-bold bg-rose-50 px-3 py-2 rounded-lg border-2 border-rose-200 text-rose-800 animate-in zoom-in">
+             <span className="flex items-center gap-1"><span className="text-sm">⬆️</span> オク上で歌うなら</span>
+             {adjUp === currentKey ? (
+               <span className="bg-white px-3 py-1 rounded-full shadow-sm text-rose-600 font-bold hover:bg-rose-50 transition border border-rose-200 min-w-27.5">今のキーでOK!</span>
+            ) : (
+              <button 
+                onClick={() => handleKeyChange(adjUp)}
+                className="bg-white px-3 py-1 rounded-full shadow-sm text-rose-600 font-bold hover:bg-rose-50 transition border border-rose-200 min-w-27.5"
+              >
+                キー {formatKey(adjUp)} にする
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* 3. 普通に歌う提案 */}
+        {!isImpossible && !isOriginalKeyPerfect && adjNormal !== null && adjNormal !== currentKey && (
+          <div className="flex items-center justify-between text-xs font-bold bg-orange-50 px-3 py-2 rounded-lg border-2 border-orange-200 text-orange-800 animate-in zoom-in">
+            <span>{adjNormal < 0 ? "高いかも..." : "低いかも..."}</span>
+            <button 
+              onClick={() => handleKeyChange(adjNormal)}
+              className="bg-white px-3 py-1 rounded-full shadow-sm text-orange-600 font-bold hover:bg-orange-50 transition border border-orange-200 min-w-27.5"
+            >
+              おすすめ: {formatKey(adjNormal)}
+            </button>
+          </div>
+        )}
+
+        {/* 4. 成功メッセージ */}
+        {isPerfect && !isImpossible && (
+          <div className="text-center py-1 animate-in zoom-in duration-300">
+            <span className="text-xs font-bold text-green-600 bg-green-50 px-4 py-1.5 rounded-full border border-green-200 shadow-sm inline-flex items-center gap-1">
+              <span className="text-sm">✨</span> 今のキーで歌えるよ！
+            </span>
+          </div>
+        )}
+      </div>
+      
+      {!userMax && !userMin && (
+        <p className="text-[10px] text-gray-400 text-center mt-2">
+          プロフィール設定で自分の音域を登録すると、<br/>おすすめキーが表示されます
+        </p>
+      )}
+    </div>
+  );
+}
