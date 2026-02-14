@@ -162,7 +162,7 @@ export default function KeyController({
           <div className="flex items-center justify-between text-xs font-bold bg-rose-50 px-3 py-2 rounded-lg border-2 border-rose-200 text-rose-800 animate-in zoom-in">
              <span className="flex items-center gap-1"><span className="text-sm">⬆️</span> オク上で歌うなら</span>
              {adjUp === currentKey ? (
-               <span className="bg-white px-3 py-1 rounded-full shadow-sm text-rose-600 font-bold hover:bg-rose-50 transition border border-rose-200 min-w-27.5">今のキーでOK!</span>
+               <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full font-bold border border-rose-200 min-w-27.5 text-center">今のキーでOK!</span>
             ) : (
               <button 
                 onClick={() => handleKeyChange(adjUp)}
