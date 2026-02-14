@@ -108,7 +108,7 @@ export default function KeyController({
         </button>
 
         <div className="text-center min-w-20">
-          <div className={`text-4xl font-black font-mono tracking-tighter ${currentKey === 0 ? "text-gray-800" : "text-blue-600"}`}>
+          <div className={`text-4xl font-black font-mono tracking-tighter text-gray-800`}>
             {formatKey(currentKey)}
           </div>
           <p className="text-xs text-gray-400 mt-1 font-bold">
@@ -145,11 +145,11 @@ export default function KeyController({
           <div className="flex items-center justify-between text-xs font-bold bg-blue-50 px-3 py-2 rounded-lg border-2 border-blue-200 text-blue-800 animate-in zoom-in">
             <span className="flex items-center gap-1"><span className="text-sm">⬇️</span> オク下で歌うなら</span>
             {adjDown === currentKey ? (
-               <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-[10px] border border-blue-200 min-w-27.5 text-center">今のキーでOK!</span>
+               <span className="bg-blue-100 text-blue-600 px-3 rounded-full text-[10px] border border-blue-200 min-w-27.5 h-8 flex items-center justify-center">今のキーでOK!</span>
             ) : (
               <button 
                 onClick={() => handleKeyChange(adjDown)}
-                className="bg-white px-3 py-1 rounded-full shadow-sm text-blue-600 font-bold hover:bg-blue-50 transition border border-blue-200 min-w-27.5"
+                className="bg-white px-3 rounded-full shadow-sm text-blue-600 font-bold hover:bg-blue-50 transition border border-blue-200 min-w-27.5 h-8 flex items-center justify-center"
               >
                 キー {formatKey(adjDown)} にする
               </button>
@@ -162,11 +162,11 @@ export default function KeyController({
           <div className="flex items-center justify-between text-xs font-bold bg-rose-50 px-3 py-2 rounded-lg border-2 border-rose-200 text-rose-800 animate-in zoom-in">
              <span className="flex items-center gap-1"><span className="text-sm">⬆️</span> オク上で歌うなら</span>
              {adjUp === currentKey ? (
-               <span className="bg-rose-100 text-rose-600 px-3 py-1 rounded-full font-bold border border-rose-200 min-w-27.5 text-center">今のキーでOK!</span>
+               <span className="bg-rose-100 text-rose-600 px-3 rounded-full text-[10px] border border-rose-200 min-w-27.5 h-8 flex items-center justify-center">今のキーでOK!</span>
             ) : (
               <button 
                 onClick={() => handleKeyChange(adjUp)}
-                className="bg-white px-3 py-1 rounded-full shadow-sm text-rose-600 font-bold hover:bg-rose-50 transition border border-rose-200 min-w-27.5"
+                className="bg-white px-3 rounded-full shadow-sm text-rose-600 font-bold hover:bg-rose-50 transition border border-rose-200 min-w-27.5 h-8 flex items-center justify-center"
               >
                 キー {formatKey(adjUp)} にする
               </button>
@@ -177,10 +177,10 @@ export default function KeyController({
         {/* 3. 普通に歌う提案 */}
         {!isImpossible && !isOriginalKeyPerfect && adjNormal !== null && adjNormal !== currentKey && (
           <div className="flex items-center justify-between text-xs font-bold bg-orange-50 px-3 py-2 rounded-lg border-2 border-orange-200 text-orange-800 animate-in zoom-in">
-            <span>{adjNormal < 0 ? "高いかも..." : "低いかも..."}</span>
+            <span>{adjNormal < 0 ? "原曲が高いかも..." : "原曲が低いかも..."}</span>
             <button 
               onClick={() => handleKeyChange(adjNormal)}
-              className="bg-white px-3 py-1 rounded-full shadow-sm text-orange-600 font-bold hover:bg-orange-50 transition border border-orange-200 min-w-27.5"
+              className="bg-white px-3 rounded-full shadow-sm text-orange-600 font-bold hover:bg-orange-50 transition border border-orange-200 min-w-27.5 h-8 flex items-center justify-center"
             >
               おすすめ: {formatKey(adjNormal)}
             </button>
