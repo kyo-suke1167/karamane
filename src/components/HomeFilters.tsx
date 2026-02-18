@@ -57,7 +57,7 @@ export function HomeFilters({ onSearchChange, onStatusChange }: Props) {
           placeholder="曲名・歌手名で検索..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm shadow-sm focus:ring-2 focus:ring-amber-400 outline-none transition-all"
+          className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-base sm:text-sm shadow-sm focus:ring-2 focus:ring-amber-400 outline-none transition-all"
         />
       </div>
 
