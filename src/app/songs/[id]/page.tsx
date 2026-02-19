@@ -52,11 +52,11 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
   const videoId = getYouTubeId(song.youtubeUrl);
 
   return (
-    <div className="max-w-2xl mx-auto pb-20"> {/* フッターとかぶらないようにpb-20追加 */}
+    <div className="max-w-2xl mx-auto pb-20">
       <div className="mb-6">
         <Link
           href={backUrl}
-          className="text-gray-500 hover:text-amber-500 transition flex items-center gap-1 font-bold"
+          className="text-muted-foreground hover:text-primary transition flex items-center gap-1 font-bold"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
             <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
@@ -65,34 +65,34 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
         </Link>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden transition-colors">
         {/* ヘッダー部分 */}
-        <div className={`p-6 border-b border-gray-100 ${statusStyle.cardBg}`}>
+        <div className={`p-6 border-b border-border-light ${statusStyle.cardBg}`}>
           <div className="flex flex-wrap items-center gap-3 mb-3">
             {/* ステータスバッジ */}
             <span
-              className={`inline-flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full border bg-white ${statusStyle.badgeColor}`}
+              className={`inline-flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full border ${statusStyle.badgeColor}`}
             >
               {statusStyle.icon} {statusStyle.label}
             </span>
 
             {/* 音域バッジ */}
             {song.maxNoteId && (
-               <span className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.maxNoteId)}`}>
+               <span className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.maxNoteId)}`}>
                  最高: {getNoteName(song.maxNoteId)}
                </span>
             )}
             {song.minNoteId && (
-               <span className={`text-sm font-bold px-3 py-1 rounded border bg-white ${getNoteColor(song.minNoteId)}`}>
+               <span className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.minNoteId)}`}>
                  最低: {getNoteName(song.minNoteId)}
                </span>
             )}
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-800 leading-tight">
+          <h1 className="text-3xl font-bold text-foreground leading-tight">
             {song.title}
           </h1>
-          <p className="text-lg text-gray-600 mt-2 font-medium">
+          <p className="text-lg text-muted-foreground mt-2 font-medium">
             {song.artist}
           </p>
         </div>
@@ -113,7 +113,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
               />
             </div>
           ) : song.youtubeUrl ? (
-            <div className="bg-gray-100 rounded-xl p-4 text-center text-gray-500 text-sm break-all">
+            <div className="bg-muted rounded-xl p-4 text-center text-muted-foreground text-sm break-all">
               <a
                 href={song.youtubeUrl}
                 target="_blank"
@@ -127,7 +127,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
 
           {/* キーコントローラー */}
           <div>
-            <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+            <h2 className="text-sm font-bold text-primary/90 uppercase tracking-wider mb-2">
               Custom Key
             </h2>
             <KeyController
@@ -143,17 +143,17 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
           {/* メモ表示エリア */}
           {song.memo && (
             <div>
-              <h2 className="text-sm font-bold text-gray-400 uppercase tracking-wider mb-2">
+              <h2 className="text-sm font-bold text-primary/90 uppercase tracking-wider mb-2">
                 Memo
               </h2>
-              <div className="bg-amber-50 border border-amber-100 rounded-xl p-5 text-gray-700 whitespace-pre-wrap leading-relaxed shadow-sm">
+              <div className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-xl p-5 text-foreground whitespace-pre-wrap leading-relaxed shadow-sm transition-colors">
                 {song.memo}
               </div>
             </div>
           )}
 
           {/* メタ情報 */}
-          <div className="border-t border-gray-100 pt-6 flex flex-col gap-2 text-sm text-gray-400">
+          <div className="border-t border-border-light pt-6 flex flex-col gap-2 text-sm text-muted-foreground">
             <p>登録ユーザー: {song.user?.name}</p>
             <p>登録日: {song.createdAt.toLocaleDateString()}</p>
           </div>
@@ -162,7 +162,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
           <div className="flex gap-3 pt-4">
              <Link 
                href={`/songs/${song.id}/edit`}
-               className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 py-3 rounded-lg font-bold text-center transition"
+               className="flex-1 bg-muted hover:opacity-80 text-foreground py-3 rounded-lg font-bold text-center transition"
              >
                編集する
              </Link>

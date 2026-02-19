@@ -54,55 +54,57 @@ export default function ProfileForm({ user }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
+    <form onSubmit={handleSubmit} className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6 transition-colors">
       
       {/* 名前 */}
       <div>
-        <label className="block text-sm font-bold text-gray-700 mb-1">お名前 (ニックネーム)</label>
+        <label className="block text-sm font-bold text-foreground mb-1">お名前 (ニックネーム)</label>
         <input
           type="text"
           required
-          className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-amber-400"
+          className="w-full bg-background text-foreground border border-border p-3 rounded-lg outline-none focus:ring-2 focus:ring-ring transition-colors"
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
         />
       </div>
 
       {/* 音域設定エリア */}
-      <div className="bg-amber-50 p-4 rounded-xl space-y-4">
-        <h3 className="font-bold text-gray-700 flex items-center gap-2">
+      <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl space-y-4 transition-colors">
+        <h3 className="font-bold text-foreground flex items-center gap-2">
           音域設定
-          <span className="text-xs font-normal text-gray-500">※キー提案に使われます</span>
+          <span className="text-xs font-normal text-muted-foreground">※キー提案に使われます</span>
         </h3>
         
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">最低音 (Low)</label>
+            <label className="block text-xs font-bold text-muted-foreground mb-1">最低音 (Low)</label>
             <div className="relative">
               <select
                 value={formData.minNoteId}
                 onChange={(e) => setFormData({ ...formData, minNoteId: Number(e.target.value) })}
-                className="w-full border p-2 rounded-lg appearance-none bg-white cursor-pointer hover:border-amber-400 transition"
+                className="w-full bg-background text-foreground border border-border p-2 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-ring outline-none transition-colors"
               >
                 {NOTE_OPTIONS.map((n) => (
                   <option key={n.id} value={n.value}>{n.label}</option>
                 ))}
               </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 mb-1">最高音 (High)</label>
+            <label className="block text-xs font-bold text-muted-foreground mb-1">最高音 (High)</label>
             <div className="relative">
               <select
                 value={formData.maxNoteId}
                 onChange={(e) => setFormData({ ...formData, maxNoteId: Number(e.target.value) })}
-                className="w-full border p-2 rounded-lg appearance-none bg-white cursor-pointer hover:border-amber-400 transition"
+                className="w-full bg-background text-foreground border border-border p-2 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-ring outline-none transition-colors"
               >
                 {NOTE_OPTIONS.map((n) => (
                   <option key={n.id} value={n.value}>{n.label}</option>
                 ))}
               </select>
+              <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>
             </div>
           </div>
         </div>
@@ -110,12 +112,12 @@ export default function ProfileForm({ user }: Props) {
 
       {/* メッセージ表示エリア */}
       {message && (
-        <div className="p-3 bg-green-50 text-green-600 font-bold rounded-lg text-center animate-pulse">
+        <div className="p-3 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 font-bold border border-green-200 dark:border-green-800/50 rounded-lg text-center animate-pulse transition-colors">
           {message}
         </div>
       )}
       {error && (
-        <div className="p-3 bg-red-50 text-red-600 font-bold rounded-lg text-center">
+        <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 font-bold border border-red-200 dark:border-red-800/50 rounded-lg text-center transition-colors">
           {error}
         </div>
       )}
@@ -125,7 +127,7 @@ export default function ProfileForm({ user }: Props) {
         <button
           type="submit"
           disabled={isPending}
-          className="bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-8 rounded-xl transition shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold py-3 px-8 rounded-xl transition-colors shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isPending ? "更新中..." : "保存する"}
         </button>

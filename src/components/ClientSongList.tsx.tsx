@@ -64,17 +64,17 @@ export function ClientSongList({ initialSongs, userName }: Props) {
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-foreground flex items-center gap-2">
               {userName}さんの持ち歌
             </h2>
-            <p className="text-gray-500 text-sm mt-1 font-bold">
+            <p className="text-muted-foreground text-sm mt-1 font-bold">
               {filterQuery || filterStatuses.length > 0 ? "検索結果:" : "全"} {filteredSongs.length} 曲
             </p>
           </div>
           
           <Link
             href="/songs/create"
-            className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-6 py-2 rounded-full shadow-md transition whitespace-nowrap"
+            className="bg-primary hover:bg-primary-hover text-primary-foreground font-bold px-6 py-2 rounded-full shadow-md transition whitespace-nowrap"
           >
             + 曲を追加
           </Link>
@@ -91,14 +91,14 @@ export function ClientSongList({ initialSongs, userName }: Props) {
       {/* 持ち歌リスト */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredSongs.length === 0 ? (
-          <div className="col-span-2 text-center py-20 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-            <p className="text-gray-400 font-bold mb-4">
+          <div className="col-span-2 text-center py-20 bg-muted rounded-2xl border-2 border-dashed border-border">
+            <p className="text-muted-foreground font-bold mb-4">
               {(filterQuery || filterStatuses.length > 0)
                 ? "条件に一致する曲が見つかりません..." 
                 : "まだ曲が登録されていません..."}
             </p>
             {!filterQuery && filterStatuses.length === 0 && (
-              <Link href="/songs/create" className="text-amber-500 font-bold underline hover:text-amber-600">
+              <Link href="/songs/create" className="text-primary font-bold underline hover:text-primary-hover">
                 最初の1曲を登録！
               </Link>
             )}
@@ -110,15 +110,15 @@ export function ClientSongList({ initialSongs, userName }: Props) {
               <Link
                 key={song.id}
                 href={`/songs/${song.id}`}
-                className={`block bg-white border border-gray-200 border-l-4 rounded-xl shadow-sm hover:shadow-md transition px-4 py-3 ${statusStyle.cardBorder} ${statusStyle.cardBg}`}
+                className={`block bg-card border border-border border-l-4 rounded-xl shadow-sm hover:shadow-md transition px-4 py-3 ${statusStyle.cardBorder} ${statusStyle.cardBg}`}
               >
-                <div className="flex flex-wrap justify-between items-center gap-2 mb-3 border-b border-gray-100 pb-2">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-3 border-b border-border-light pb-2">
                   <div className="flex items-center gap-2">
                     <span className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusStyle.badgeColor}`}>
                       {statusStyle.icon} {statusStyle.label}
                     </span>
                     {song.key !== 0 && (
-                      <span className="text-[11px] font-mono font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded border border-gray-200">
+                      <span className="text-[11px] font-mono font-bold bg-muted text-muted-foreground px-2 py-0.5 rounded border border-border">
                         key:{song.key > 0 ? `+${song.key}` : song.key}
                       </span>
                     )}
@@ -137,8 +137,8 @@ export function ClientSongList({ initialSongs, userName }: Props) {
                   </div>
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800 leading-tight mb-1">{song.title}</h3>
-                  <p className="text-xs text-gray-500 font-bold">{song.artist}</p>
+                  <h3 className="text-lg font-bold text-foreground leading-tight mb-1">{song.title}</h3>
+                  <p className="text-xs text-muted-foreground font-bold">{song.artist}</p>
                 </div>
               </Link>
             );

@@ -46,38 +46,37 @@ export default function VocalRangeBar({ songMin, songMax, userMin, userMax, curr
     return marks;
   }, []);
 
-  // バーの色を決定するロジック
   const barColor = currentKey === 0 
-    ? "bg-amber-400"      // ±0: オレンジ
+    ? "bg-amber-400 dark:bg-amber-500"      // ±0: オレンジ
     : currentKey > 0 
-      ? "bg-red-400"     // + : 優しめの赤 (Rose)
-      : "bg-blue-400";    // - : 青
+      ? "bg-red-400 dark:bg-red-500"     // + : 優しめの赤
+      : "bg-blue-400 dark:bg-blue-500";    // - : 青
 
   return (
     <div className="w-full mb-6 select-none">
-      <div className="relative h-24 bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">
+      <div className="relative h-24 bg-card rounded-xl border border-border overflow-hidden transition-colors">
         
         {/* 1. 背景の目盛り線 */}
         {markers.map((mark) => (
           <div
             key={mark.id}
-            className="absolute top-0 bottom-0 border-l border-gray-300 flex flex-col justify-end pb-1"
+            className="absolute top-0 bottom-0 border-l border-border-light flex flex-col justify-end pb-1"
             style={{ left: `${getPosition(mark.id)}%` }}
           >
-            <span className="text-[10px] text-gray-400 font-bold ml-1">{mark.label}</span>
+            <span className="text-[10px] text-muted-foreground font-bold ml-1">{mark.label}</span>
           </div>
         ))}
 
         {/* 2. ユーザーの音域 (グレーの背景バー) */}
         {userMin && userMax ? (
           <div
-            className="absolute h-6 top-12 bg-gray-300/50 rounded-sm flex items-center justify-center border border-gray-300"
+            className="absolute h-6 top-12 bg-muted rounded-sm flex items-center justify-center border border-border-light transition-colors"
             style={{ left: `${userLeft}%`, width: `${userWidth}%` }}
           >
-            <span className="text-[10px] text-gray-600 font-bold px-1 truncate">あなた</span>
+            <span className="text-[10px] text-muted-foreground font-bold px-1 truncate">あなた</span>
           </div>
         ) : (
-          <div className="absolute top-12 w-full text-center text-[10px] text-gray-400">
+          <div className="absolute top-12 w-full text-center text-[10px] text-muted-foreground">
             ※ユーザー音域未設定
           </div>
         )}
@@ -98,19 +97,19 @@ export default function VocalRangeBar({ songMin, songMax, userMin, userMax, curr
         {/* 4. 重なり判定のガイド線 */}
         {userMax && (
           <div 
-            className="absolute top-0 bottom-0 border-l-2 border-red-300/50 border-dashed pointer-events-none"
+            className="absolute top-0 bottom-0 border-l-2 border-red-300/50 dark:border-red-500/50 border-dashed pointer-events-none"
             style={{ left: `${getPosition(userMax)}%` }}
           />
         )}
         {userMin && (
           <div 
-            className="absolute top-0 bottom-0 border-l-2 border-blue-300/50 border-dashed pointer-events-none"
+            className="absolute top-0 bottom-0 border-l-2 border-blue-300/50 dark:border-blue-500/50 border-dashed pointer-events-none"
             style={{ left: `${getPosition(userMin)}%` }}
           />
         )}
       </div>
       
-      <div className="flex justify-between text-xs text-gray-400 mt-1 px-1">
+      <div className="flex justify-between text-xs text-muted-foreground mt-1 px-1">
         <span>Low</span>
         <span>High</span>
       </div>

@@ -52,12 +52,12 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
           セットリスト
         </h1>
         <button
           onClick={() => setIsOpen(true)}
-          className="bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition"
+          className="bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-bold px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
             <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
@@ -68,8 +68,9 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
 
       <div className="space-y-3">
         {setlists.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-dashed border-gray-300">
-            <p>まだセットリストがありません</p>
+          // 0件表示
+          <div className="text-center py-10 text-muted-foreground bg-muted rounded-xl border border-dashed border-border transition-colors">
+            <p className="font-bold">まだセットリストがありません</p>
             <p className="text-sm mt-1">右上のボタンから作ってみよう！</p>
           </div>
         ) : (
@@ -77,29 +78,36 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
             <Link
               key={list.id}
               href={`/setlists/${list.id}`}
-              className="block bg-white p-5 rounded-xl shadow-sm border border-gray-100 hover:border-amber-300 transition relative group"
+              // リストカード
+              className="block bg-card p-5 rounded-xl shadow-sm border border-border hover:border-primary transition-colors relative group"
             >
               <div className="flex justify-between items-start mb-2">
-                <h3 className="font-bold text-lg text-gray-800 line-clamp-1">{list.title}</h3>
-                <span className="bg-amber-50 text-amber-600 text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ml-2">
+                {/* タイトル */}
+                <h3 className="font-bold text-lg text-foreground line-clamp-1">{list.title}</h3>
+                {/* 曲数バッジ */}
+                <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ml-2 transition-colors">
                   {list._count.entries}曲
                 </span>
               </div>
               
               {list.description && (
-                <p className="text-gray-500 text-sm mb-3 line-clamp-2">
+                // 説明
+                <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                   {list.description}
                 </p>
               )}
 
-              <div className="flex justify-between items-center border-t border-gray-50 pt-2 mt-2">
-                <span className="text-xs text-gray-400 font-medium">
+              {/* 区切り線 */}
+              <div className="flex justify-between items-center border-t border-border-light pt-2 mt-2 transition-colors">
+                {/* 日付 */}
+                <span className="text-xs text-muted-foreground font-medium">
                   作成日: {new Date(list.createdAt).toLocaleDateString()}
                 </span>
 
+                {/* 削除ボタン */}
                 <button
                   onClick={(e) => handleDelete(e, list.id)}
-                  className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition z-10"
+                  className="text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-full transition-colors z-10"
                   title="セットリストを削除"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -112,47 +120,50 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
         )}
       </div>
 
+      {/* モーダル (ポップアップ) */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
-          <div className="bg-white w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-            <h2 className="text-xl font-bold mb-4 text-center">新しいセットリスト</h2>
+          <div className="bg-card border border-border w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 transition-colors">
+            <h2 className="text-xl font-bold mb-4 text-center text-foreground">新しいセットリスト</h2>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">タイトル</label>
+                <label className="block text-sm font-bold text-foreground mb-1">タイトル</label>
                 <input
                   {...register("title")}
                   placeholder="例: 2026夏ライブ"
-                  className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-amber-400"
+                  className="w-full bg-background text-foreground border border-border p-3 rounded-lg outline-none focus:ring-2 focus:ring-ring transition-colors placeholder:text-muted-foreground"
                   autoFocus
                 />
-                {errors.title && <p className="text-red-500 text-xs mt-1 font-bold">{errors.title.message}</p>}
+                {errors.title && <p className="text-red-500 dark:text-red-400 text-xs mt-1 font-bold">{errors.title.message}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-1">説明 (メモ)</label>
+                <label className="block text-sm font-bold text-foreground mb-1">説明 (メモ)</label>
                 <textarea
                   {...register("description")}
                   placeholder="例: 盛り上げ重視のリスト"
                   rows={3}
-                  className="w-full border p-3 rounded-lg outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                  className="w-full bg-background text-foreground border border-border p-3 rounded-lg outline-none focus:ring-2 focus:ring-ring resize-none transition-colors placeholder:text-muted-foreground"
                 />
-                {errors.description && <p className="text-red-500 text-xs mt-1 font-bold">{errors.description.message}</p>}
+                {errors.description && <p className="text-red-500 dark:text-red-400 text-xs mt-1 font-bold">{errors.description.message}</p>}
               </div>
 
               <div className="flex gap-3 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-3 rounded-xl transition"
+                  className="flex-1 bg-muted hover:opacity-80 text-foreground font-bold py-3 rounded-xl transition-colors"
                 >
                   キャンセル
                 </button>
                 <button
                   type="submit"
                   disabled={!isValid || isPending}
-                  className={`flex-2 font-bold py-3 rounded-xl transition shadow-md
-                    ${(!isValid || isPending) ? "bg-gray-300 text-gray-500" : "bg-amber-500 hover:bg-amber-600 text-white"}`}
+                  className={`flex-2 font-bold py-3 rounded-xl transition-colors shadow-md
+                    ${(!isValid || isPending) 
+                      ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                      : "bg-primary hover:bg-primary-hover text-primary-foreground"}`}
                 >
                   {isPending ? "作成中..." : "作成する"}
                 </button>

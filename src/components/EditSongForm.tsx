@@ -7,69 +7,62 @@ import Link from "next/link";
 import type { Song } from "@/generated/prisma";
 
 type Props = {
-  song: Song; // 編集対象の曲データをもらう
+  song: Song;
 };
 
 export default function EditSongForm({ song }: Props) {
-  // 初期値を設定
   const [minNoteId, setMinNoteId] = useState(song.minNoteId || 60);
   const [maxNoteId, setMaxNoteId] = useState(song.maxNoteId || 72);
 
-  // 音域矛盾チェック
   const isInvalid = minNoteId > maxNoteId;
 
-  // 削除ボタン処理
   const handleDelete = async () => {
-    // 1. ブラウザ標準の確認ダイアログ
     const isConfirmed = confirm("本当にこの曲を削除してもいいですか？");
-    
     if (isConfirmed) {
-      // 2. 削除アクションを実行
       await deleteSong(song.id);
     }
   };
 
   return (
-    <form action={updateSong} className="bg-white p-6 rounded-xl shadow-sm border border-gray-200 space-y-6">
-      {/* IDを送る */}
+    <form action={updateSong} className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6 transition-colors">
       <input type="hidden" name="id" value={song.id} />
 
       {/* 曲名 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">曲名 <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-foreground mb-1">曲名 <span className="text-red-500">*</span></label>
         <input name="title" type="text" required defaultValue={song.title}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground" />
       </div>
 
       {/* アーティスト */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">アーティスト <span className="text-red-500">*</span></label>
+        <label className="block text-sm font-medium text-foreground mb-1">アーティスト <span className="text-red-500">*</span></label>
         <input name="artist" type="text" required defaultValue={song.artist}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground" />
       </div>
 
       {/* YouTube URL */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">YouTube URL</label>
+        <label className="block text-sm font-medium text-foreground mb-1">YouTube URL</label>
         <input name="youtubeUrl" type="url" defaultValue={song.youtubeUrl || ""}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none" />
+          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground" />
       </div>
 
       {/* ステータス選択 */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">今のレベル</label>
-        <div className="flex gap-4">
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 `has-checked:bg-blue-50` `has-checked:border-blue-300`">
+        <label className="block text-sm font-medium text-foreground mb-2">今のレベル</label>
+        <div className="flex flex-col sm:flex-row gap-4 text-foreground">
+          <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-blue-50 dark:has-checked:bg-blue-900/20 has-checked:border-blue-300 dark:has-checked:border-blue-700">
             <input type="radio" name="status" value="PRACTICING" defaultChecked={song.status === "PRACTICING"} className="accent-blue-500" />
-            <span>🔰 練習中</span>
+            <span className="font-bold">🔰 練習中</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-:checked:bg-green-50 has-:checked:border-green-300">
+          <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-green-50 dark:has-checked:bg-green-900/20 has-checked:border-green-300 dark:has-checked:border-green-700">
             <input type="radio" name="status" value="LEARNED" defaultChecked={song.status === "LEARNED"} className="accent-green-500" />
-            <span>🎤 持ち歌</span>
+            <span className="font-bold">🎤 持ち歌</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer border p-3 rounded-lg hover:bg-gray-50 has-:checked:bg-amber-50 has-:checked:border-amber-300">
-            <input type="radio" name="status" value="MASTERED" defaultChecked={song.status === "MASTERED"} className="accent-amber-500" />
-            <span>👑 十八番</span>
+          <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-primary/10 has-checked:border-primary/50">
+            <input type="radio" name="status" value="MASTERED" defaultChecked={song.status === "MASTERED"} className="accent-primary" />
+            <span className="font-bold">👑 十八番</span>
           </label>
         </div>
       </div>
@@ -77,65 +70,73 @@ export default function EditSongForm({ song }: Props) {
       {/* 音域入力 */}
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">最低音</label>
+          <label className="block text-sm font-medium text-foreground mb-1">最低音</label>
           <div className="relative">
             <select name="minNoteId" value={minNoteId} onChange={(e) => setMinNoteId(Number(e.target.value))}
-              className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer ${isInvalid ? "border-red-500 bg-red-50" : "border-gray-300 bg-white"}`}>
+              className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
+                isInvalid ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
+              }`}>
               {NOTE_OPTIONS.map((note) => (
-                <option key={note.id} value={note.value}>{note.label}</option>
+                <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>
               ))}
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">▼</div>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>
           </div>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">最高音</label>
+          <label className="block text-sm font-medium text-foreground mb-1">最高音</label>
           <div className="relative">
             <select name="maxNoteId" value={maxNoteId} onChange={(e) => setMaxNoteId(Number(e.target.value))}
-              className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer ${isInvalid ? "border-red-500 bg-red-50" : "border-gray-300 bg-white"}`}>
+              className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
+                isInvalid ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
+              }`}>
               {NOTE_OPTIONS.map((note) => (
-                <option key={note.id} value={note.value}>{note.label}</option>
+                <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>
               ))}
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">▼</div>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>
           </div>
         </div>
       </div>
 
       {/* メモ */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">メモ</label>
+        <label className="block text-sm font-medium text-foreground mb-1">メモ</label>
         <textarea name="memo" rows={4} defaultValue={song.memo || ""}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-amber-500 outline-none resize-none" />
+          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none resize-none transition-colors placeholder:text-muted-foreground" />
       </div>
 
       {/* エラー表示 */}
       {isInvalid && (
-        <div className="text-red-500 text-sm font-bold bg-red-50 p-3 rounded-lg text-center">
+        <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
           ⚠️ 最低音が最高音より高くなっています。修正してください。
         </div>
       )}
 
       {/* ボタン */}
-      <div className="flex justify-between items-center pt-6 border-t border-gray-100 mt-6">
+      <div className="flex flex-wrap justify-between items-center gap-4 pt-6 border-t border-border-light mt-6">
         
         {/* 削除ボタン */}
         <button
           type="button"
           onClick={handleDelete}
-          className="text-red-500 text-sm font-bold hover:bg-red-50 px-4 py-2 rounded-lg transition"
+          className="text-red-500 dark:text-red-400 text-sm font-bold hover:bg-red-50 dark:hover:bg-red-900/20 px-4 py-2 rounded-lg transition-colors"
         >
           この曲を削除する
         </button>
 
         {/* キャンセル、更新ボタン */}
-        <div className="flex gap-3">
-          <Link href={`/songs/${song.id}`} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg transition">
+        <div className="flex gap-3 w-full sm:w-auto">
+          <Link href={`/songs/${song.id}`} className="flex-1 sm:flex-none text-center px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors font-bold">
             キャンセル
           </Link>
           <button type="submit" disabled={isInvalid}
-            className={`px-6 py-2 rounded-lg font-bold transition shadow-md ${isInvalid ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "bg-amber-500 text-white hover:bg-amber-600"}`}>
+            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold transition-colors shadow-md ${
+              isInvalid 
+                ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                : "bg-primary text-primary-foreground hover:bg-primary-hover"
+            }`}>
             更新する
           </button>
         </div>
