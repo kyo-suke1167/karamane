@@ -24,10 +24,10 @@
 
 .dark {
   /* 🌙 ダークモード (Neutral Dark) */
-  --background: #222222;
+  --background: #202024;
   --foreground: #f3f4f6;
   
-  --card: #343434;
+  --card: #121214;
   --card-foreground: #f3f4f6;
   
   --muted: #454545;
