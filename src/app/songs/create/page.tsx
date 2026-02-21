@@ -15,15 +15,15 @@ export default function CreateSongPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm({
-    resolver: zodResolver(songSchema),
+  } = useForm<SongSchema>({
+    resolver: zodResolver(songSchema) as any,
     defaultValues: {
       title: "",
       artist: "",
       youtubeUrl: "",
       status: "LEARNED",
-      minNoteId: 60,
-      maxNoteId: 72,
+      minNoteId: null ,
+      maxNoteId: null ,
       memo: "",
     },
   });
@@ -98,11 +98,12 @@ export default function CreateSongPage() {
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">最低音</label>
             <div className="relative">
-              <select {...register("minNoteId")} 
+              <select {...register("minNoteId", { setValueAs: (v) => v === "" ? null : Number(v) })} 
                 className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
                   errors.minNoteId ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
                 }`}
               >
+                <option value="" className="bg-background text-foreground">未設定</option>
                 {NOTE_OPTIONS.map((note) => <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>)}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>
@@ -111,11 +112,12 @@ export default function CreateSongPage() {
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">最高音</label>
             <div className="relative">
-              <select {...register("maxNoteId")} 
+              <select {...register("maxNoteId", { setValueAs: (v) => v === "" ? null : Number(v) })} 
                 className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
                   errors.maxNoteId ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
                 }`}
               >
+                <option value="" className="bg-background text-foreground">未設定</option>
                 {NOTE_OPTIONS.map((note) => <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>)}
               </select>
               <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-muted-foreground">▼</div>

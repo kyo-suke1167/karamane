@@ -22,14 +22,6 @@ export async function registerUser(data: SignupSchema) {
   // Zodで検証 & 整形 (小文字化など)
   const parsed = signupSchema.parse(data);
 
-  // 重複チェック
-  const existingUser = await prisma.user.findUnique({
-    where: { email: parsed.email },
-  });
-  if (existingUser) {
-    throw new Error("そのメールアドレスは既に使われています！");
-  }
-
   // パスワードハッシュ化
   const hashedPassword = await bcrypt.hash(parsed.password, 10);
 
@@ -39,8 +31,6 @@ export async function registerUser(data: SignupSchema) {
       name: parsed.name,
       email: parsed.email,
       password: hashedPassword,
-      minNoteId: parsed.minNoteId,
-      maxNoteId: parsed.maxNoteId,
     },
   });
 }
@@ -66,7 +56,7 @@ export async function createSong(data: SongSchema) {
   await prisma.song.create({
     data: {
       ...parsed,
-      userId: (session.user as any).id,
+      userId: session.user.id,
     },
   });
   
@@ -80,14 +70,18 @@ export async function updateSong(formData: FormData) {
   const id = Number(formData.get("id"));
   if (!id || isNaN(id)) throw new Error("IDが存在しません");
 
+  // 空文字が送られてきたら null として扱う
+  const rawMinNoteId = formData.get("minNoteId");
+  const rawMaxNoteId = formData.get("maxNoteId");
+
   const rawData = {
     title: formData.get("title"),
     artist: formData.get("artist"),
     youtubeUrl: formData.get("youtubeUrl"),
     memo: formData.get("memo"),
     status: formData.get("status"),
-    minNoteId: formData.get("minNoteId"),
-    maxNoteId: formData.get("maxNoteId"),
+    minNoteId: rawMinNoteId === "" ? null : rawMinNoteId,
+    maxNoteId: rawMaxNoteId === "" ? null : rawMaxNoteId,
   };
 
   const parsed = songSchema.parse(rawData);
@@ -130,7 +124,7 @@ export async function updateProfile(formData: FormData) {
   const parsed = profileSchema.parse(rawData);
 
   await prisma.user.update({
-    where: { id: (session.user as any).id },
+    where: { id: session.user.id },
     data: parsed,
   });
 }
@@ -150,7 +144,7 @@ export async function createSetlist(data: SetlistSchema) {
     data: {
       title: parsed.title,
       description: parsed.description,
-      userId: (session.user as any).id,
+      userId: session.user.id,
     },
   });
 

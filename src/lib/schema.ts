@@ -3,7 +3,6 @@ import { z } from "zod";
 // ==========================================
 // 共通ルール
 // ==========================================
-// メールアドレス: 自動で小文字化 & 空白削除
 const emailRule = z
   .string()
   .min(1, "メールアドレスを入力してください")
@@ -11,7 +10,6 @@ const emailRule = z
   .trim()
   .toLowerCase();
 
-// パスワード: 半角英数字記号 8文字以上
 const passwordRule = z
   .string()
   .min(8, "パスワードは8文字以上で入力してください")
@@ -24,11 +22,6 @@ export const signupSchema = z.object({
   name: z.string().min(1, "名前を入力してください"),
   email: emailRule,
   password: passwordRule,
-  minNoteId: z.coerce.number(),
-  maxNoteId: z.coerce.number(),
-}).refine((data) => data.minNoteId <= data.maxNoteId, {
-  message: "最低音は最高音より低く設定してください",
-  path: ["minNoteId"],
 });
 
 export type SignupSchema = z.infer<typeof signupSchema>;
@@ -51,10 +44,16 @@ export const songSchema = z.object({
   artist: z.string().min(1, "アーティスト名は必須です").max(100),
   youtubeUrl: z.string().url("URLの形式が正しくありません").or(z.literal("")).optional(),
   status: z.enum(["PRACTICING", "LEARNED", "MASTERED"]),
-  minNoteId: z.coerce.number(),
-  maxNoteId: z.coerce.number(),
+  minNoteId: z.coerce.number().nullable().optional(),
+  maxNoteId: z.coerce.number().nullable().optional(),
   memo: z.string().max(500).optional(),
-}).refine((data) => data.minNoteId <= data.maxNoteId, {
+}).refine((data) => {
+  // 両方設定されている場合のみ大小をチェック
+  if (data.minNoteId != null && data.maxNoteId != null) {
+    return data.minNoteId <= data.maxNoteId;
+  }
+  return true;
+}, {
   message: "最低音は最高音より低く設定してください",
   path: ["minNoteId"],
 });
@@ -66,9 +65,14 @@ export type SongSchema = z.infer<typeof songSchema>;
 // ==========================================
 export const profileSchema = z.object({
   name: z.string().min(1, "名前を入力してください").max(50),
-  minNoteId: z.coerce.number(),
-  maxNoteId: z.coerce.number(),
-}).refine((data) => data.minNoteId <= data.maxNoteId, {
+  minNoteId: z.coerce.number().nullable().optional(),
+  maxNoteId: z.coerce.number().nullable().optional(),
+}).refine((data) => {
+  if (data.minNoteId != null && data.maxNoteId != null) {
+    return data.minNoteId <= data.maxNoteId;
+  }
+  return true;
+}, {
   message: "最低音は最高音より低く設定してください",
   path: ["minNoteId"],
 });

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import KeyController from "@/components/vocal-range/KeyController";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth"; 
+import { authOptions } from "@/lib/auth";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -18,16 +18,15 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
   const songId = Number(id);
 
   const query = await searchParams;
-  // backUrl が指定されていればそれを、なければトップページ ("/") を使う
   const backUrl = typeof query.backUrl === "string" ? query.backUrl : "/";
-  
-  const backLabel = backUrl.includes("/setlists") ? "セットリストに戻る" : "一覧に戻る";
+  const backLabel = backUrl.includes("/setlists")
+    ? "リストに戻る"
+    : "一覧に戻る";
 
   if (isNaN(songId)) {
     return notFound();
   }
 
-  // 1. 曲データを取得
   const song = await prisma.song.findUnique({
     where: { id: songId },
     include: { user: true },
@@ -37,11 +36,8 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
     return notFound();
   }
 
-  // 2. セッションから「ログイン中のユーザー」を取得
   const session = await getServerSession(authOptions);
-  
   let currentUser = null;
-  
   if (session?.user?.email) {
     currentUser = await prisma.user.findUnique({
       where: { email: session.user.email },
@@ -53,40 +49,58 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
 
   return (
     <div className="max-w-2xl mx-auto pb-20">
-      <div className="mb-6">
-        <Link
-          href={backUrl}
-          className="text-muted-foreground hover:text-primary transition flex items-center gap-1 font-bold"
+      {/* 戻るボタン */}
+      <Link
+        href={backUrl}
+        className="text-muted-foreground hover:text-primary transition flex items-center gap-1 font-bold text-sm shrink-0"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          className="w-4 h-4"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-            <path fillRule="evenodd" d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z" clipRule="evenodd" />
-          </svg>
-          {backLabel}
-        </Link>
-      </div>
+          <path
+            fillRule="evenodd"
+            d="M17 10a.75.75 0 01-.75.75H5.612l4.158 3.96a.75.75 0 11-1.04 1.08l-5.5-5.25a.75.75 0 010-1.08l5.5-5.25a.75.75 0 111.04 1.08L5.612 9.25H16.25A.75.75 0 0117 10z"
+            clipRule="evenodd"
+          />
+        </svg>
+        {backLabel}
+      </Link>
 
-      <div className="bg-card rounded-2xl shadow-sm border border-border overflow-hidden transition-colors">
+      <div className="bg-card rounded-2xl mt-1 shadow-sm border border-border overflow-hidden transition-colors">
         {/* ヘッダー部分 */}
-        <div className={`p-6 border-b border-border-light ${statusStyle.cardBg}`}>
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            {/* ステータスバッジ */}
-            <span
-              className={`inline-flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full border ${statusStyle.badgeColor}`}
-            >
-              {statusStyle.icon} {statusStyle.label}
-            </span>
 
-            {/* 音域バッジ */}
-            {song.maxNoteId && (
-               <span className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.maxNoteId)}`}>
-                 最高: {getNoteName(song.maxNoteId)}
-               </span>
-            )}
-            {song.minNoteId && (
-               <span className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.minNoteId)}`}>
-                 最低: {getNoteName(song.minNoteId)}
-               </span>
-            )}
+        <div
+          className={`p-6 border-b border-border-light ${statusStyle.cardBg}`}
+        >
+          {/* バッジエリア */}
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex flex-wrap items-center gap-2">
+              {/* ステータスバッジ */}
+              <span
+                className={`inline-flex items-center gap-1 text-sm font-bold px-3 py-1 rounded-full border ${statusStyle.badgeColor}`}
+              >
+                {statusStyle.icon} {statusStyle.label}
+              </span>
+
+              {/* 音域バッジ */}
+              {song.maxNoteId !== null && song.maxNoteId !== 0 && (
+                <span
+                  className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.maxNoteId)}`}
+                >
+                  最高: {getNoteName(song.maxNoteId)}
+                </span>
+              )}
+              {song.minNoteId !== null && song.minNoteId !== 0 && (
+                <span
+                  className={`text-sm font-bold px-3 py-1 rounded border ${getNoteColor(song.minNoteId)}`}
+                >
+                  最低: {getNoteName(song.minNoteId)}
+                </span>
+              )}
+            </div>
           </div>
 
           <h1 className="text-3xl font-bold text-foreground leading-tight">
@@ -160,12 +174,12 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
 
           {/* 編集ボタンエリア */}
           <div className="flex gap-3 pt-4">
-             <Link 
-               href={`/songs/${song.id}/edit`}
-               className="flex-1 bg-muted hover:opacity-80 text-foreground py-3 rounded-lg font-bold text-center transition"
-             >
-               編集する
-             </Link>
+            <Link
+              href={`/songs/${song.id}/edit`}
+              className="flex-1 bg-muted hover:opacity-80 text-foreground py-3 rounded-lg font-bold text-center transition"
+            >
+              編集する
+            </Link>
           </div>
         </div>
       </div>

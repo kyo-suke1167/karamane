@@ -11,10 +11,10 @@ type Props = {
 };
 
 export default function EditSongForm({ song }: Props) {
-  const [minNoteId, setMinNoteId] = useState(song.minNoteId || 60);
-  const [maxNoteId, setMaxNoteId] = useState(song.maxNoteId || 72);
+  const [minNoteId, setMinNoteId] = useState<number | null>(song.minNoteId);
+  const [maxNoteId, setMaxNoteId] = useState<number | null>(song.maxNoteId);
 
-  const isInvalid = minNoteId > maxNoteId;
+  const isInvalid = minNoteId !== null && maxNoteId !== null && minNoteId > maxNoteId;
 
   const handleDelete = async () => {
     const isConfirmed = confirm("本当にこの曲を削除してもいいですか？");
@@ -72,10 +72,11 @@ export default function EditSongForm({ song }: Props) {
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">最低音</label>
           <div className="relative">
-            <select name="minNoteId" value={minNoteId} onChange={(e) => setMinNoteId(Number(e.target.value))}
+            <select name="minNoteId" value={minNoteId === null ? "" : minNoteId} onChange={(e) => setMinNoteId(e.target.value === "" ? null : Number(e.target.value))}
               className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
                 isInvalid ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
               }`}>
+              <option value="" className="bg-background text-foreground">未設定</option>
               {NOTE_OPTIONS.map((note) => (
                 <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>
               ))}
@@ -87,10 +88,11 @@ export default function EditSongForm({ song }: Props) {
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">最高音</label>
           <div className="relative">
-            <select name="maxNoteId" value={maxNoteId} onChange={(e) => setMaxNoteId(Number(e.target.value))}
+            <select name="maxNoteId" value={maxNoteId === null ? "" : maxNoteId} onChange={(e) => setMaxNoteId(e.target.value === "" ? null : Number(e.target.value))}
               className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
                 isInvalid ? "border-red-500 bg-red-50 dark:bg-red-900/20" : "border-border bg-background"
               }`}>
+              <option value="" className="bg-background text-foreground">未設定</option>
               {NOTE_OPTIONS.map((note) => (
                 <option key={note.id} value={note.value} className="bg-background text-foreground">{note.label}</option>
               ))}

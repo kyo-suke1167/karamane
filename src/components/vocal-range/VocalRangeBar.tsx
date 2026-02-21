@@ -49,7 +49,7 @@ export default function VocalRangeBar({ songMin, songMax, userMin, userMax, curr
   const barColor = currentKey === 0 
     ? "bg-amber-400 dark:bg-amber-500"      // ±0: オレンジ
     : currentKey > 0 
-      ? "bg-red-400 dark:bg-red-500"     // + : 優しめの赤
+      ? "bg-red-400 dark:bg-red-500"     // + : 赤
       : "bg-blue-400 dark:bg-blue-500";    // - : 青
 
   return (

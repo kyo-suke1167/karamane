@@ -18,8 +18,8 @@ export default function ProfileForm({ user }: Props) {
 
   const [formData, setFormData] = useState({
     name: user.name || "",
-    minNoteId: user.minNoteId || 60,
-    maxNoteId: user.maxNoteId || 72,
+    minNoteId: user.minNoteId as number | null,
+    maxNoteId: user.maxNoteId as number | null,
   });
 
   const router = useRouter();
@@ -33,8 +33,10 @@ export default function ProfileForm({ user }: Props) {
     try {
       const data = new FormData();
       data.append("name", formData.name);
-      data.append("minNoteId", String(formData.minNoteId));
-      data.append("maxNoteId", String(formData.maxNoteId));
+      
+      // null の場合は空文字 "" として送信
+      data.append("minNoteId", formData.minNoteId !== null ? String(formData.minNoteId) : "");
+      data.append("maxNoteId", formData.maxNoteId !== null ? String(formData.maxNoteId) : "");
 
       await updateProfile(data);
       setMessage("プロフィールを更新しました");
@@ -88,10 +90,14 @@ export default function ProfileForm({ user }: Props) {
             <label className="block text-xs font-bold text-muted-foreground mb-1">最低音 (Low)</label>
             <div className="relative">
               <select
-                value={formData.minNoteId}
-                onChange={(e) => setFormData({ ...formData, minNoteId: Number(e.target.value) })}
+                // 値が null なら空文字 "" を選択状態にする
+                value={formData.minNoteId === null ? "" : formData.minNoteId}
+                // 空文字 "" が選ばれたら null をセット
+                onChange={(e) => setFormData({ ...formData, minNoteId: e.target.value === "" ? null : Number(e.target.value) })}
                 className="w-full bg-background text-foreground border border-border p-2 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-ring outline-none transition-colors"
               >
+                {/* 「未設定」オプション */}
+                <option value="">未設定</option>
                 {NOTE_OPTIONS.map((n) => (
                   <option key={n.id} value={n.value}>{n.label}</option>
                 ))}
@@ -104,10 +110,11 @@ export default function ProfileForm({ user }: Props) {
             <label className="block text-xs font-bold text-muted-foreground mb-1">最高音 (High)</label>
             <div className="relative">
               <select
-                value={formData.maxNoteId}
-                onChange={(e) => setFormData({ ...formData, maxNoteId: Number(e.target.value) })}
+                value={formData.maxNoteId === null ? "" : formData.maxNoteId}
+                onChange={(e) => setFormData({ ...formData, maxNoteId: e.target.value === "" ? null : Number(e.target.value) })}
                 className="w-full bg-background text-foreground border border-border p-2 rounded-lg appearance-none cursor-pointer focus:ring-2 focus:ring-ring outline-none transition-colors"
               >
+                <option value="">未設定</option>
                 {NOTE_OPTIONS.map((n) => (
                   <option key={n.id} value={n.value}>{n.label}</option>
                 ))}

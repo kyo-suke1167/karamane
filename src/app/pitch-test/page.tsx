@@ -12,6 +12,11 @@ const getNoteFromPitch = (frequency: number) => {
   return Math.round(noteNum) + 69; 
 };
 
+// 音量の足切りライン（0〜100）
+const MIN_VOLUME = 20;
+// 同じ音を何フレーム連続で出せたら「歌声」とみなすか
+const MIN_SUSTAIN_FRAMES = 30;
+
 export default function PitchTestPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -31,6 +36,9 @@ export default function PitchTestPage() {
   const requestRef = useRef<number | null>(null);
   const detectPitchRef = useRef<any>(null);
 
+  const sustainedNoteRef = useRef<number | null>(null);
+  const sustainCountRef = useRef<number>(0);
+
   const startListening = async () => {
     try {
       setSaveMessage(""); 
@@ -49,6 +57,10 @@ export default function PitchTestPage() {
 
       detectPitchRef.current = AMDF({ sampleRate: audioCtx.sampleRate });
 
+      // リセット
+      sustainedNoteRef.current = null;
+      sustainCountRef.current = 0;
+
       setIsListening(true);
       updatePitch();
     } catch (err) {
@@ -66,6 +78,8 @@ export default function PitchTestPage() {
     setVolume(0);
     setPitch(null);
     setNoteNum(null);
+    sustainedNoteRef.current = null;
+    sustainCountRef.current = 0;
   };
 
   const updatePitch = () => {
@@ -82,7 +96,7 @@ export default function PitchTestPage() {
     const newVolume = Math.min(100, Math.floor(rms * 1000));
     setVolume(newVolume);
 
-    if (rms > 0.01) {
+    if (newVolume >= MIN_VOLUME) {
       const detectedPitch = detectPitchRef.current(float32Array);
       if (detectedPitch) {
         setPitch(Math.round(detectedPitch));
@@ -90,16 +104,33 @@ export default function PitchTestPage() {
         setNoteNum(currentNoteNum);
 
         if (currentNoteNum >= 36 && currentNoteNum <= 84) {
-          setLowestNote(prev => (prev === null || currentNoteNum < prev) ? currentNoteNum : prev);
-          setHighestNote(prev => (prev === null || currentNoteNum > prev) ? currentNoteNum : prev);
+          // 一瞬の裏返り対策、同じ音をキープしているかチェック
+          if (currentNoteNum === sustainedNoteRef.current) {
+            sustainCountRef.current += 1;
+            
+            // 規定の回数（MIN_SUSTAIN_FRAMES）キープできたら初めて記録する！
+            if (sustainCountRef.current >= MIN_SUSTAIN_FRAMES) {
+              setLowestNote(prev => (prev === null || currentNoteNum < prev) ? currentNoteNum : prev);
+              setHighestNote(prev => (prev === null || currentNoteNum > prev) ? currentNoteNum : prev);
+            }
+          } else {
+            // 違う音にブレたらカウントをリセット
+            sustainedNoteRef.current = currentNoteNum;
+            sustainCountRef.current = 1;
+          }
         }
       } else {
         setPitch(null);
         setNoteNum(null);
+        sustainedNoteRef.current = null;
+        sustainCountRef.current = 0;
       }
     } else {
       setPitch(null);
       setNoteNum(null);
+      // 無音になったらキープ回数もリセット
+      sustainedNoteRef.current = null;
+      sustainCountRef.current = 0;
     }
 
     requestRef.current = requestAnimationFrame(updatePitch);
@@ -113,6 +144,8 @@ export default function PitchTestPage() {
     setLowestNote(null);
     setHighestNote(null);
     setSaveMessage("");
+    sustainedNoteRef.current = null;
+    sustainCountRef.current = 0;
   };
 
   const handleSaveToProfile = () => {
@@ -121,10 +154,10 @@ export default function PitchTestPage() {
     startTransition(async () => {
       try {
         await saveVocalRange(lowestNote, highestNote);
-        setSaveMessage("✅ プロフィールに音域を保存したお！");
+        setSaveMessage("プロフィールに音域を保存しました！");
         router.refresh();
       } catch (error) {
-        setSaveMessage("❌ 保存に失敗しました...");
+        setSaveMessage("保存に失敗しました...");
       }
     });
   };
@@ -134,12 +167,9 @@ export default function PitchTestPage() {
     return getKaraokeNoteName(num);
   };
 
-  // 優越感くすぐりメッセージ生成ロジック
   const getPraiseMessage = () => {
     if (lowestNote === null || highestNote === null) return null;
     const range = highestNote - lowestNote;
-    
-    // 1オクターブ = 12半音
     if (range >= 36) return "3オクターブ幅！？もはや人間やめてる！";
     if (range >= 30) return "2.5オクターブ幅！バケモノ級の音域！！";
     if (range >= 24) return "2オクターブ超え！プロ顔負けの広さ！！";
@@ -169,7 +199,8 @@ export default function PitchTestPage() {
           💡 測定のコツ
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          無理な声出しは禁物！あなたが<strong className="text-primary">「楽に出せる声の範囲」</strong>を測定してみてね。結果はあくまで目安なので、あとからプロフィールで微調整もできるよ！
+          無理な声出しは禁物！あなたが<strong className="text-primary">「楽に出せる声の範囲」</strong>を測定してみてね。
+          雑音や一瞬の裏返りを拾わないよう、<strong className="text-red-400">赤い線</strong>を超える声量で「アー」と少しキープして歌ってね！
         </p>
       </div>
 
@@ -186,17 +217,20 @@ export default function PitchTestPage() {
 
         <div className="text-center py-6 bg-background rounded-xl border border-border relative overflow-hidden">
           <p className="text-sm font-bold text-muted-foreground mb-1 relative z-10">現在の音</p>
-          <div className="text-6xl font-black text-primary tracking-tighter mb-1 relative z-10 min-h-18">
+          <div className={`text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors ${volume >= MIN_VOLUME ? 'text-primary' : 'text-muted-foreground/30'}`}>
             {getDisplayNote(noteNum)}
           </div>
           <p className="text-xs text-muted-foreground font-mono relative z-10">
-            {pitch ? `${pitch} Hz` : "--- Hz"}
+            {pitch && volume >= MIN_VOLUME ? `${pitch} Hz` : "--- Hz"}
           </p>
           
-          <div 
-            className="absolute bottom-0 left-0 bg-primary/10 transition-all duration-75 ease-out"
-            style={{ width: `${volume}%`, height: '4px' }}
-          />
+          <div className="absolute bottom-0 left-0 w-full h-2 bg-muted">
+            <div className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10" style={{ left: `${MIN_VOLUME}%` }} />
+            <div 
+              className={`h-full transition-all duration-75 ease-out ${volume >= MIN_VOLUME ? 'bg-primary' : 'bg-primary/30'}`}
+              style={{ width: `${volume}%` }}
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -208,13 +242,12 @@ export default function PitchTestPage() {
           </div>
           <div className="bg-background p-4 rounded-xl text-center border border-border flex flex-col justify-center">
             <p className="text-xs font-bold text-muted-foreground mb-1">最高音 (High)</p>
-            <div className="text-3xl font-black text-red-500 min-h-9">
+            <div className="text-3xl font-black text-red-400 min-h-9">
               {getDisplayNote(highestNote)}
             </div>
           </div>
         </div>
 
-        {/* 音域が広がった時に出現するメッセージ */}
         <div className="min-h-10 flex items-center justify-center">
           {praiseMessage && (
             <div className="text-sm font-bold text-amber-500 dark:text-amber-400 animate-bounce text-center px-2">
@@ -223,6 +256,7 @@ export default function PitchTestPage() {
           )}
         </div>
 
+        {/* ボタンエリア */}
         <div className="flex flex-col gap-3 pt-2">
           {isListening ? (
             <button onClick={stopListening} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30 font-bold py-3 rounded-xl transition-colors w-full">
@@ -233,21 +267,30 @@ export default function PitchTestPage() {
               <button onClick={resetRecords} className="bg-muted hover:bg-border text-foreground font-bold py-3 px-4 rounded-xl transition-colors shrink-0">
                 リセット
               </button>
-              <button onClick={startListening} className="flex-1 bg-primary text-primary-foreground hover:bg-primary-hover font-bold py-3 rounded-xl shadow-md transition-colors">
-                測定をはじめる
+              
+              <button 
+                onClick={startListening} 
+                className={`flex-1 font-bold py-3 rounded-xl shadow-md transition-colors ${
+                  (lowestNote !== null || highestNote !== null)
+                    ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30" // 🦁 記録あり：ストップと同じ赤色！
+                    : "bg-primary text-primary-foreground hover:bg-primary-hover" // 🦁 記録なし：最初のプライマリー色！
+                }`}
+              >
+                {(lowestNote !== null || highestNote !== null) ? "測定を再開" : "測定をはじめる"}
               </button>
             </div>
           )}
 
+          {/* 保存ボタン */}
           {lowestNote !== null && highestNote !== null && !isListening && (
             <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <button 
                 onClick={handleSaveToProfile}
                 disabled={isPending}
-                className={`w-full font-bold py-3 rounded-xl transition-colors border
+                className={`w-full font-bold py-3 rounded-xl transition-colors shadow-sm
                   ${isPending 
-                    ? "bg-muted text-muted-foreground border-border cursor-not-allowed" 
-                    : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30 hover:bg-green-500/20"}`}
+                    ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                    : "bg-primary text-primary-foreground hover:bg-primary-hover"}`}
               >
                 {isPending ? "保存中..." : "この音域をプロフィールに保存"}
               </button>

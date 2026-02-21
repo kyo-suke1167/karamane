@@ -1,168 +1,115 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { loginSchema, type LoginSchema } from "@/lib/schema";
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [isPending, setIsPending] = useState(false);
+  const searchParams = useSearchParams();
+  const registered = searchParams.get("registered");
+  
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors, isValid },
-  } = useForm({
-    resolver: zodResolver(loginSchema),
-    defaultValues: { email: "", password: "" },
-    mode: "onChange",
-  });
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
 
-  const onSubmit = async (data: LoginSchema) => {
-    setIsPending(true);
-    const result = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      redirect: false,
-    });
+    try {
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
 
-    if (result?.error) {
-      setError("root", { message: "メールアドレスかパスワードが違います" });
-      setIsPending(false);
-    } else {
-      router.push("/");
-      router.refresh();
+      if (res?.error) {
+        setError("メールアドレスかパスワードが間違っています。");
+      } else {
+        router.push("/");
+        router.refresh();
+      }
+    } catch (err) {
+      setError("ログイン中にエラーが発生しました。");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-start justify-center">
-      <div className="bg-white max-w-md w-full p-8 rounded-2xl shadow-lg border border-gray-100">
-        <h1 className="text-2xl font-bold text-center text-gray-800 mb-6">
-          おかえりなさい！
-        </h1>
+    <div className="max-w-md mx-auto py-10 px-4">
+      <h1 className="text-2xl font-black text-foreground mb-6 text-center">
+        ログイン
+      </h1>
+
+      <div className="bg-card border border-border p-6 rounded-xl shadow-sm transition-colors">
+        {registered && (
+          <div className="bg-green-500/10 text-green-600 dark:text-green-400 border border-green-500/20 p-3 rounded-lg text-sm font-bold mb-4">
+            登録が完了しました！ログインしてください。
+          </div>
+        )}
         
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {error && (
+          <div className="bg-red-500/10 text-red-500 border border-red-500/20 p-3 rounded-lg text-sm font-bold mb-4">
+            {error}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-muted-foreground mb-1">
               メールアドレス
             </label>
             <input
-              {...register("email")}
               type="email"
-              className={`w-full border p-3 rounded-lg outline-none transition
-                ${errors.email ? "border-red-500 bg-red-50" : "border-gray-300 focus:ring-2 focus:ring-amber-400"}`}
-              placeholder="lion@example.com"
+              required
+              className="w-full bg-background text-foreground border border-border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-            {errors.email && (
-              <p className="text-red-500 text-xs mt-1 font-bold">
-                {errors.email.message}
-              </p>
-            )}
           </div>
 
           <div>
-            <label className="block text-sm font-bold text-gray-700 mb-1">
+            <label className="block text-sm font-bold text-muted-foreground mb-1">
               パスワード
             </label>
-            <div className="relative">
-              <input
-                {...register("password")}
-                type={showPassword ? "text" : "password"}
-                className={`w-full border p-3 rounded-lg outline-none transition pr-10
-                  ${errors.password ? "border-red-500 bg-red-50" : "border-gray-300 focus:ring-2 focus:ring-amber-400"}`}
-                placeholder="パスワードを入力"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-amber-500 transition"
-              >
-                {showPassword ? (
-                  // 目が開いているアイコン (表示中)
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                ) : (
-                  // 目に斜線が入っているアイコン (非表示中)
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="w-5 h-5"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-red-500 text-xs mt-1 font-bold">
-                {errors.password.message}
-              </p>
-            )}
+            <input
+              type="password"
+              required
+              className="w-full bg-background text-foreground border border-border p-3 rounded-lg focus:ring-2 focus:ring-primary outline-none transition-colors"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
           </div>
-
-          {errors.root && (
-            <p className="text-red-500 text-sm font-bold text-center bg-red-50 p-2 rounded-lg">
-              ⚠️ {errors.root.message}
-            </p>
-          )}
 
           <button
             type="submit"
-            // バリデーションNG または 送信中は無効化
-            disabled={!isValid || isPending}
-            className={`w-full font-bold py-3 rounded-xl transition shadow-md flex justify-center items-center gap-2
-              ${!isValid || isPending
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed" // 無効時
-                : "bg-amber-500 hover:bg-amber-600 text-white"}` // 有効時
-            }
+            disabled={loading}
+            className="w-full bg-primary text-primary-foreground font-bold py-3 rounded-xl hover:bg-primary-hover transition-colors shadow-sm disabled:opacity-50 mt-2"
           >
-            {isPending ? (
-               <>
-                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-500 border-t-transparent"></div>
-                 ログイン中...
-               </>
-            ) : "ログイン"}
+            {loading ? "ログイン中..." : "ログイン"}
           </button>
         </form>
 
-        <div className="mt-6 text-center text-sm">
-          まだアカウントがない？{" "}
-          <Link href="/signup" className="text-blue-500 underline">
+        <div className="mt-6 text-center text-sm text-muted-foreground">
+          アカウントをお持ちでない方は{" "}
+          <Link href="/signup" className="text-primary font-bold hover:underline transition-colors">
             新規登録
           </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Login() {
+  return (
+    <Suspense fallback={<div className="text-center py-10 text-foreground">読み込み中...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

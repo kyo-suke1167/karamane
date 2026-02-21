@@ -124,12 +124,13 @@ export function ClientSongList({ initialSongs, userName }: Props) {
                     )}
                   </div>
                   <div className="flex gap-1">
-                    {song.minNoteId && (
+                    {song.minNoteId !== null && song.minNoteId !== 0 && (
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getNoteColor(song.minNoteId)}`}>
                         最低音:{getNoteName(song.minNoteId)}
                       </span>
                     )}
-                    {song.maxNoteId && (
+                    
+                    {song.maxNoteId !== null && song.maxNoteId !== 0 && (
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${getNoteColor(song.maxNoteId)}`}>
                         最高音:{getNoteName(song.maxNoteId)}
                       </span>
