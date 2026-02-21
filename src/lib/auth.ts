@@ -42,15 +42,16 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          minNoteId: user.minNoteId,
+          maxNoteId: user.maxNoteId,
         };
       },
     }),
   ],
   callbacks: {
-
     async session({ session, token }) {
       if (session.user && token.sub) {
-        (session.user).id = token.sub;
+        session.user.id = token.sub;
       }
       return session;
     },
