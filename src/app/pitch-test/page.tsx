@@ -140,10 +140,10 @@ export default function PitchTestPage() {
     const range = highestNote - lowestNote;
     
     // 1オクターブ = 12半音
-    if (range >= 36) return "👑 3オクターブ幅！？もはや人間やめてる！";
-    if (range >= 30) return "🔥 2.5オクターブ幅！バケモノ級の音域！！";
-    if (range >= 24) return "🎉 2オクターブ超え！プロ顔負けの広さ！！";
-    if (range >= 18) return "✨ 平均以上の広い音域！色んな曲が歌えそう！";
+    if (range >= 36) return "3オクターブ幅！？もはや人間やめてる！";
+    if (range >= 30) return "2.5オクターブ幅！バケモノ級の音域！！";
+    if (range >= 24) return "2オクターブ超え！プロ顔負けの広さ！！";
+    if (range >= 18) return "平均以上の広い音域！色んな曲が歌えそう！";
     return null;
   };
 
@@ -214,7 +214,7 @@ export default function PitchTestPage() {
           </div>
         </div>
 
-        {/* 音域が広がった時に出現するメッセージ！ */}
+        {/* 音域が広がった時に出現するメッセージ */}
         <div className="min-h-10 flex items-center justify-center">
           {praiseMessage && (
             <div className="text-sm font-bold text-amber-500 dark:text-amber-400 animate-bounce text-center px-2">
@@ -249,7 +249,7 @@ export default function PitchTestPage() {
                     ? "bg-muted text-muted-foreground border-border cursor-not-allowed" 
                     : "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30 hover:bg-green-500/20"}`}
               >
-                {isPending ? "保存中..." : "🎯 この音域をプロフィールに保存"}
+                {isPending ? "保存中..." : "この音域をプロフィールに保存"}
               </button>
               {saveMessage && (
                 <p className="text-center text-sm font-bold mt-2 text-green-600 dark:text-green-400 animate-pulse">

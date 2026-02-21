@@ -118,14 +118,6 @@ export default function Header({ currentUser }: Props) {
                         </div>
 
                         <Link
-                          href="/pitch-test"
-                          onClick={() => setIsMenuOpen(false)}
-                          className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 transition border-b border-border-light"
-                        >
-                          音域を測定する
-                        </Link>
-
-                        <Link
                           href="/settings/profile"
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-foreground hover:bg-muted hover:text-primary-hover transition"
@@ -133,12 +125,19 @@ export default function Header({ currentUser }: Props) {
                           ユーザー設定
                         </Link>
 
+                        <Link
+                          href="/pitch-test"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-foreground hover:bg-muted hover:text-primary-hover transition"
+                        >
+                          音域を測定する
+                        </Link>
+
                         <button
                           onClick={() => {
                             setIsMenuOpen(false);
                             signOut({ callbackUrl: "/login" });
                           }}
-                          // ホバー色を bg-red-500/10 にすることで、ライトでもダークでも綺麗に見えるお！
                           className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-red-500 hover:bg-red-500/10 transition border-t border-border-light"
                         >
                           ログアウト

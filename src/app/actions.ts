@@ -136,7 +136,7 @@ export async function updateProfile(formData: FormData) {
 }
 
 // ==========================================
-// 📂 セットリスト操作 (Create / Update / Delete)
+// セットリスト操作 (Create / Update / Delete)
 // ==========================================
 
 // 1. セットリスト作成
