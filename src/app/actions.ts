@@ -252,3 +252,19 @@ export async function addSongsToSetlist(setlistId: number, songIds: number[]) {
     })),
   });
 }
+
+// ==========================================
+// 音域測定からの直接保存用
+// ==========================================
+export async function saveVocalRange(minNoteId: number, maxNoteId: number) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { 
+      minNoteId, 
+      maxNoteId 
+    },
+  });
+}

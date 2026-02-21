@@ -16,10 +16,10 @@
   --border: #e5e7eb;
   --border-light: #f3f4f6;
   
-  --primary: #f59e0b; /* amber-500 */
+  --primary: #f59e0b;
   --primary-foreground: #ffffff;
-  --primary-hover: #d97706; /* amber-600 */
-  --ring: #fbbf24; /* amber-400 */
+  --primary-hover: #d97706;
+  --ring: #fbbf24;
 }
 
 .dark {

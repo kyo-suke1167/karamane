@@ -118,6 +118,14 @@ export default function Header({ currentUser }: Props) {
                         </div>
 
                         <Link
+                          href="/pitch-test"
+                          onClick={() => setIsMenuOpen(false)}
+                          className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-primary hover:bg-primary/10 transition border-b border-border-light"
+                        >
+                          音域を測定する
+                        </Link>
+
+                        <Link
                           href="/settings/profile"
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-foreground hover:bg-muted hover:text-primary-hover transition"

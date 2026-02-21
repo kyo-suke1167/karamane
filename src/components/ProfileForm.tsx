@@ -5,6 +5,7 @@ import { updateProfile } from "@/app/actions";
 import { NOTE_OPTIONS } from "@/lib/noteUtils";
 import { User } from "@/generated/prisma"; 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type Props = {
   user: User;
@@ -74,6 +75,13 @@ export default function ProfileForm({ user }: Props) {
           音域設定
           <span className="text-xs font-normal text-muted-foreground">※キー提案に使われます</span>
         </h3>
+
+        <Link 
+          href="/pitch-test" 
+          className="flex items-center justify-center gap-2 w-full bg-background border-2 border-primary/30 hover:border-primary text-primary font-bold py-3 rounded-lg transition-all shadow-sm hover:shadow-md"
+        >
+          🎙️ マイクで自動測定する
+        </Link>
         
         <div className="grid grid-cols-2 gap-4">
           <div>
