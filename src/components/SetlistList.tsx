@@ -17,7 +17,7 @@ type Setlist = {
 };
 
 export function SetlistList({ setlists }: { setlists: Setlist[] }) {
-  const router = useRouter(); // 🦁 追加
+  const router = useRouter(); 
   const [isOpen, setIsOpen] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -33,31 +33,26 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
     mode: "onChange",
   });
 
-  // 新規作成ボタンを押した時
   const openCreateModal = () => {
     setEditId(null);
     reset({ title: "", description: "" });
     setIsOpen(true);
   };
 
-  // えんぴつボタン（編集）を押した時
   const openEditModal = (e: React.MouseEvent, list: Setlist) => {
-    e.preventDefault(); // Linkの遷移を防ぐお！
+    e.preventDefault(); 
     e.stopPropagation();
     setEditId(list.id);
     reset({ title: list.title, description: list.description || "" });
     setIsOpen(true);
   };
 
-  // 保存処理（新規作成・編集を判定）
   const onSubmit = (data: SetlistSchema) => {
     startTransition(async () => {
       if (editId) {
-        // 編集モード
         await updateSetlist(editId, data);
-        router.refresh(); // 最新のデータに更新
+        router.refresh(); 
       } else {
-        // 新規作成モード
         await createSetlist(data);
       }
       setIsOpen(false);
@@ -78,24 +73,36 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">
           セットリスト
         </h1>
-        <button
-          onClick={openCreateModal}
-          className="bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-bold px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-            <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
-          </svg>
-          新規作成
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            href="/songs/import"
+            className="flex-1 sm:flex-none bg-primary/10 hover:bg-primary/20 text-primary text-sm font-bold px-3 py-2 sm:px-4 rounded-full transition-colors flex items-center justify-center gap-1.5 border border-primary/20"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+            </svg>
+            <span className="hidden sm:inline">YouTubeから再生リストを追加</span>
+            <span className="sm:hidden">一括追加</span>
+          </Link>
+
+          <button
+            onClick={openCreateModal}
+            className="flex-1 sm:flex-none bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-bold px-3 py-2 sm:px-4 rounded-full shadow-md flex items-center justify-center gap-1.5 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z" />
+            </svg>
+            新規作成
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">
         {setlists.length === 0 ? (
-          // 0件表示
           <div className="text-center py-10 text-muted-foreground bg-muted rounded-xl border border-dashed border-border transition-colors">
             <p className="font-bold">まだセットリストがありません</p>
             <p className="text-sm mt-1">右上のボタンから作ってみよう！</p>
@@ -105,11 +112,9 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
             <Link
               key={list.id}
               href={`/setlists/${list.id}`}
-              // リストカード
               className="block bg-card p-5 rounded-xl shadow-sm border border-border hover:border-primary transition-colors relative group"
             >
               <div className="flex justify-between items-start mb-2">
-                {/* タイトルと編集ボタンを並べる */}
                 <div className="flex items-center gap-2 overflow-hidden">
                   <h3 className="font-bold text-lg text-foreground line-clamp-1">{list.title}</h3>
                   <button
@@ -122,27 +127,22 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
                     </svg>
                   </button>
                 </div>
-                {/* 曲数バッジ */}
                 <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ml-2 transition-colors">
                   {list._count.entries}曲
                 </span>
               </div>
               
               {list.description && (
-                // 説明
                 <p className="text-muted-foreground text-sm mb-3 line-clamp-2">
                   {list.description}
                 </p>
               )}
 
-              {/* 区切り線 */}
               <div className="flex justify-between items-center border-t border-border-light pt-2 mt-2 transition-colors">
-                {/* 日付 */}
                 <span className="text-xs text-muted-foreground font-medium">
                   作成日: {new Date(list.createdAt).toLocaleDateString()}
                 </span>
 
-                {/* 削除ボタン */}
                 <button
                   onClick={(e) => handleDelete(e, list.id)}
                   className="text-muted-foreground/50 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 p-1.5 rounded-full transition-colors z-10"
@@ -158,7 +158,6 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
         )}
       </div>
 
-      {/* モーダル (新規作成＆編集 兼用) */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="bg-card border border-border w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 transition-colors">

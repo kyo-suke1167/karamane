@@ -15,6 +15,8 @@ import {
   type SetlistSchema
 } from "@/lib/schema";
 
+import { SongStatus } from "@/generated/prisma";
+
 // ==========================================
 // ユーザー登録
 // ==========================================
@@ -261,4 +263,188 @@ export async function saveVocalRange(minNoteId: number, maxNoteId: number) {
       maxNoteId 
     },
   });
+}
+
+// ==========================================
+// YouTube プレイリスト取得・解析機能
+// ==========================================
+
+// URLからプレイリストIDを抜き出すヘルパー関数
+function extractPlaylistId(url: string) {
+  const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : null;
+}
+
+export async function fetchYoutubePlaylist(url: string) {
+  const playlistId = extractPlaylistId(url);
+  if (!playlistId) throw new Error("無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。");
+
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) throw new Error("APIキーが設定されていません。管理者に連絡してください。");
+
+  // YouTube URLの重複チェック
+  const session = await getServerSession(authOptions);
+  const userId = session?.user?.id;
+  let existingUrls: string[] = [];
+
+  if (userId) {
+    const existingSongs = await prisma.song.findMany({
+      where: { userId, youtubeUrl: { not: null } },
+      select: { youtubeUrl: true }
+    });
+    existingUrls = existingSongs.map(s => s.youtubeUrl).filter(Boolean) as string[];
+  }
+
+  try {
+    // 1. プレイリスト自体の情報（タイトル）を取得
+    const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`);
+    const playlistData = await playlistRes.json();
+    const playlistTitle = playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
+
+    // 2. プレイリストの中身（動画リスト）を取得（最大50件）
+    const itemsRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`);
+    const itemsData = await itemsRes.json();
+
+    if (!itemsData.items) throw new Error("プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。");
+
+// 3. 動画データをKaramane用の曲データに変換＆タイトル解析
+    const songs = itemsData.items.map((item: any) => {
+      const rawTitle = item.snippet.title;
+      // 削除された動画や非公開動画はスキップ
+      if (rawTitle === "Private video" || rawTitle === "Deleted video") return null;
+
+      const videoId = item.snippet.resourceId.videoId;
+      const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      
+      const channelTitle = item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle || "";
+
+      let title = rawTitle;
+      let artist = "";
+
+      // タイトル解析ロジック（第一段階：記号での分割）
+      if (rawTitle.includes(" / ")) {
+        const parts = rawTitle.split(" / ");
+        title = parts[0].trim();
+        artist = parts[1].trim();
+      } else if (rawTitle.includes(" - ")) {
+        const parts = rawTitle.split(" - ");
+        artist = parts[0].trim();
+        title = parts[1].trim();
+      } else if (rawTitle.includes("「") && rawTitle.includes("」")) {
+        const match = rawTitle.match(/^(.*?)「(.*?)」/);
+        if (match) {
+          artist = match[1].trim();
+          title = match[2].trim();
+        }
+      }
+
+      // MV特有の不要な文字列を綺麗にお掃除
+      title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+                   .replace(/【.*?】/g, "")
+                   .replace(/\[.*?\]/g, "")
+                   .replace(/[()（）]/g, "")
+                   .trim();
+      
+      artist = artist.replace(/Official|Channel/gi, "").trim();
+      
+      // チャンネル名の掃除（「公式」も追加！）
+      const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+
+      // 決定版のアーティスト名と曲名
+      const finalArtist = artist || cleanChannelName;
+      let finalTitle = title;
+
+      // 曲名の中にアーティスト名が含まれていたら削り取る
+      // （※曲名とアーティスト名が完全に同じ場合＝「アーティスト名の自己紹介動画」などは除外）
+      if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
+        finalTitle = finalTitle.replace(finalArtist, "").trim();
+        // 削った後に残ったゴミ（先頭や末尾のスペース、ハイフン、スラッシュなど）を掃除
+        finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
+      }
+
+      // 重複チェック
+      const isDuplicate = existingUrls.includes(youtubeUrl);
+
+      return {
+        title: finalTitle || rawTitle, // もし削りすぎて空になったら元のタイトルを復活
+        artist: finalArtist || "不明なアーティスト",
+        youtubeUrl,
+        status: "LEARNED",
+        key: 0,
+        minNoteId: null,
+        maxNoteId: null,
+        memo: "YouTubeからインポート",
+        selected: !isDuplicate, 
+        isDuplicate,            
+      };
+    }).filter(Boolean); // null を除外
+
+    return { playlistTitle, songs };
+
+  } catch (error) {
+    console.error("YouTube API Error:", error);
+    throw new Error("YouTubeからのデータ取得に失敗しました。");
+  }
+}
+
+// ==========================================
+// YouTubeからの一括保存＆セトリ作成機能
+// ==========================================
+
+
+type ImportSongData = {
+  title: string;
+  artist: string;
+  youtubeUrl: string;
+  status: SongStatus;
+  key: number;
+  memo: string;
+};
+
+export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: string) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+  const userId = session.user.id;
+
+  if (songs.length === 0) return;
+
+  // 1. 曲を一括でDBに保存する
+  const createdSongs = await prisma.$transaction(
+    songs.map((song) =>
+      prisma.song.create({
+        data: {
+          title: song.title,
+          artist: song.artist,
+          youtubeUrl: song.youtubeUrl,
+          status: song.status,
+          key: song.key,
+          memo: song.memo,
+          userId,
+        },
+      })
+    )
+  );
+
+  // 2. セトリ作成がON（タイトルがある）なら、セトリを作成
+  if (setlistTitle) {
+    const setlist = await prisma.setlist.create({
+      data: {
+        title: setlistTitle,
+        description: "YouTubeからインポート",
+        userId,
+      },
+    });
+
+    // 3. 作ったセトリに、さっき保存した曲を順番通りに紐付ける
+    await prisma.setlistEntry.createMany({
+      data: createdSongs.map((song, index) => ({
+        setlistId: setlist.id,
+        songId: song.id,
+        order: index,
+      })),
+    });
+  }
+
+  // 終わったらトップページへ
+  redirect("/");
 }

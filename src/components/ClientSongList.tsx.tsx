@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getNoteName, getNoteColor } from "@/lib/noteUtils";
 import { getStatusStyle } from "@/lib/statusUtils";
@@ -31,6 +31,11 @@ export function ClientSongList({ initialSongs, userName }: Props) {
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
   const [sortKey, setSortKey] = useState("title-asc");
   const [currentPage, setCurrentPage] = useState(1);
+
+  // ページが変わった瞬間に、画面の一番上に戻す
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
   const filteredSongs = useMemo(() => {
     let result = [...initialSongs];
@@ -71,20 +76,20 @@ export function ClientSongList({ initialSongs, userName }: Props) {
   }, [initialSongs, filterQuery, filterStatuses, sortKey]);
 
   // 検索やソートを変更した瞬間に、1ページ目に戻す関数
-  const handleSearchChange = (query: string) => {
+const handleSearchChange = useCallback((query: string) => {
     setFilterQuery(query);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleStatusChange = (statuses: string[]) => {
+  const handleStatusChange = useCallback((statuses: string[]) => {
     setFilterStatuses(statuses);
     setCurrentPage(1);
-  };
+  }, []);
 
-  const handleSortChange = (key: string) => {
+  const handleSortChange = useCallback((key: string) => {
     setSortKey(key);
     setCurrentPage(1);
-  };
+  }, []);
 
   const totalPages = Math.ceil(filteredSongs.length / ITEMS_PER_PAGE);
   const paginatedSongs = filteredSongs.slice(

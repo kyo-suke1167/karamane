@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { updateSongKey } from "@/app/actions";
 import VocalRangeBar from "./VocalRangeBar";
+import Link from "next/link"; // 🦁 Linkをインポート！
 
 type Props = {
   songId: number;
@@ -92,8 +93,15 @@ export default function KeyController({
           currentKey={currentKey}
         />
       ) : (
-        <div className="bg-card/50 h-16 rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-4 border border-border">
-          音域データがありません
+        /* 🦁 キョン氏の元のデザインを活かして、控えめなボタンを横に添えたお！ */
+        <div className="bg-card/50 h-16 rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-4 border border-border gap-3">
+          <span>音域データがありません</span>
+          <Link 
+            href={`/songs/${songId}/edit`} 
+            className="px-2.5 py-1.5 bg-primary/10 text-primary font-bold rounded border border-primary/20 hover:bg-primary/20 transition-colors"
+          >
+            編集画面へ
+          </Link>
         </div>
       )}
 

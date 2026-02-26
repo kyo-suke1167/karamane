@@ -36,7 +36,19 @@ export default function CreateSongPage() {
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
-      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2 text-foreground">🎤 新しい持ち歌を登録</h1>
+      {/* 🦁 タイトル行をフレックスボックスにして右側にボタンを配置！ */}
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">🎤 新しい持ち歌を登録</h1>
+        <Link 
+          href="/songs/import"
+          className="bg-primary/10 text-primary hover:bg-primary/20 text-sm font-bold px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 shrink-0 border border-primary/20"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          YouTubeから一括追加
+        </Link>
+      </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6 transition-colors">
         

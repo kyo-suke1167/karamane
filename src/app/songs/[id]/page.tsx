@@ -76,7 +76,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
           className={`p-6 border-b border-border-light ${statusStyle.cardBg}`}
         >
           {/* バッジエリア */}
-          <div className="flex items-center justify-between gap-3 mb-3">
+          <div className="flex items-center justify-between gap-3 mb-2">
             <div className="flex flex-wrap items-center gap-2">
               {/* ステータスバッジ */}
               <span
@@ -106,7 +106,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
           <h1 className="text-3xl font-bold text-foreground leading-tight">
             {song.title}
           </h1>
-          <p className="text-lg text-muted-foreground mt-2 font-medium">
+          <p className="text-lg text-muted-foreground font-medium">
             {song.artist}
           </p>
         </div>
