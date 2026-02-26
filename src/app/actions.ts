@@ -446,3 +446,122 @@ export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: 
   // 終わったらトップページへ
   redirect("/");
 }
+
+// ==========================================
+// YouTube 単一動画取得・解析機能
+// ==========================================
+
+// 動画URLからVideoIDを抜き出すヘルパー関数
+function extractVideoId(url: string) {
+  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^&?]+)/);
+  return match ? match[1] : null;
+}
+
+export async function fetchYoutubeVideo(url: string) {
+  const videoId = extractVideoId(url);
+  if (!videoId) return { error: "無効なYouTube動画URLです。" };
+
+  const apiKey = process.env.YOUTUBE_API_KEY;
+  if (!apiKey) return { error: "APIキーが設定されていません。管理者に連絡してください。" };
+
+  try {
+    // cache: "no-store" を追加して常に最新の情報を取得
+    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`, { cache: "no-store" });
+    const data = await res.json();
+
+    if (data.error) {
+      console.error("YouTube API Error:", data.error);
+      return { error: `YouTube APIエラー: ${data.error.message}` };
+    }
+
+    if (!data.items || data.items.length === 0) {
+      return { error: "動画が見つかりませんでした。非公開か確認してください。" };
+    }
+
+    const snippet = data.items[0].snippet;
+    const rawTitle = snippet.title;
+    // 単一動画APIの場合は channelTitle にチャンネル名が入る
+    const channelTitle = snippet.channelTitle || "";
+
+    let title = rawTitle;
+    let artist = "";
+
+    // タイトル解析ロジック
+    if (rawTitle.includes(" / ")) {
+      const parts = rawTitle.split(" / ");
+      title = parts[0].trim();
+      artist = parts[1].trim();
+    } else if (rawTitle.includes(" - ")) {
+      const parts = rawTitle.split(" - ");
+      artist = parts[0].trim();
+      title = parts[1].trim();
+    } else if (rawTitle.includes("「") && rawTitle.includes("」")) {
+      const match = rawTitle.match(/^(.*?)「(.*?)」/);
+      if (match) {
+        artist = match[1].trim();
+        title = match[2].trim();
+      }
+    }
+
+    // MV特有の不要な文字列を綺麗にお掃除
+    title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+                 .replace(/【.*?】/g, "")
+                 .replace(/\[.*?\]/g, "")
+                 .replace(/[()（）]/g, "")
+                 .trim();
+    
+    artist = artist.replace(/Official|Channel/gi, "").trim();
+    
+    // チャンネル名の掃除（「公式」も追加！）
+    const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+
+    // 決定版のアーティスト名と曲名
+    const finalArtist = artist || cleanChannelName;
+    let finalTitle = title;
+
+    // 曲名の中にアーティスト名が含まれていたら削り取る
+    if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
+      finalTitle = finalTitle.replace(finalArtist, "").trim();
+      finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
+    }
+
+    // 成功時はエラーを含めずに曲名とアーティストを返す
+    return {
+      title: finalTitle || rawTitle,
+      artist: finalArtist || "不明なアーティスト",
+    };
+
+  } catch (error: any) {
+    console.error("YouTube System Error:", error);
+    return { error: "システムエラーが発生しました。取得に失敗しました。" };
+  }
+}
+
+// ==========================================
+// 一括削除モーダル用の機能
+// ==========================================
+
+// 1. モーダルを開いた時に「自分の曲だけ」をサクッと取得する関数
+export async function getUserSongsForModal() {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) return [];
+
+  return await prisma.song.findMany({
+    where: { userId: session.user.id },
+    select: { id: true, title: true, artist: true, status: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
+// 2. 選択した曲を一気にDBから消し去る関数
+export async function deleteSongs(songIds: number[]) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  await prisma.song.deleteMany({
+    where: {
+      id: { in: songIds },
+      userId: session.user.id,
+    },
+  });
+}
