@@ -76,7 +76,7 @@ export function ClientSongList({ initialSongs, userName }: Props) {
   }, [initialSongs, filterQuery, filterStatuses, sortKey]);
 
   // 検索やソートを変更した瞬間に、1ページ目に戻す関数
-const handleSearchChange = useCallback((query: string) => {
+  const handleSearchChange = useCallback((query: string) => {
     setFilterQuery(query);
     setCurrentPage(1);
   }, []);
@@ -151,7 +151,7 @@ const handleSearchChange = useCallback((query: string) => {
           </Link>
         </div>
 
-        <HomeFilters 
+        <HomeFilters
           onSearchChange={handleSearchChange}
           onStatusChange={handleStatusChange}
           onSortChange={handleSortChange}

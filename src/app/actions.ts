@@ -277,10 +277,10 @@ function extractPlaylistId(url: string) {
 
 export async function fetchYoutubePlaylist(url: string) {
   const playlistId = extractPlaylistId(url);
-  if (!playlistId) throw new Error("無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。");
+  if (!playlistId) return { error: "無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。" };
 
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) throw new Error("APIキーが設定されていません。管理者に連絡してください。");
+  if (!apiKey) return { error: "APIキーが設定されていません。管理者に連絡してください。" };
 
   // YouTube URLの重複チェック
   const session = await getServerSession(authOptions);
@@ -297,20 +297,26 @@ export async function fetchYoutubePlaylist(url: string) {
 
   try {
     // 1. プレイリスト自体の情報（タイトル）を取得
-    const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`);
+    const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`, { cache: "no-store" });
     const playlistData = await playlistRes.json();
+    
+    // API側からエラーが返ってきた場合
+    if (playlistData.error) {
+      console.error("YouTube API Error:", playlistData.error);
+      return { error: `YouTube APIエラー: ${playlistData.error.message}` };
+    }
+
     const playlistTitle = playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
 
     // 2. プレイリストの中身（動画リスト）を取得（最大50件）
-    const itemsRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`);
+    const itemsRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`, { cache: "no-store" });
     const itemsData = await itemsRes.json();
 
-    if (!itemsData.items) throw new Error("プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。");
+    if (!itemsData.items) return { error: "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。" };
 
-// 3. 動画データをKaramane用の曲データに変換＆タイトル解析
+    // 3. 動画データをKaramane用の曲データに変換＆タイトル解析
     const songs = itemsData.items.map((item: any) => {
       const rawTitle = item.snippet.title;
-      // 削除された動画や非公開動画はスキップ
       if (rawTitle === "Private video" || rawTitle === "Deleted video") return null;
 
       const videoId = item.snippet.resourceId.videoId;
@@ -321,7 +327,6 @@ export async function fetchYoutubePlaylist(url: string) {
       let title = rawTitle;
       let artist = "";
 
-      // タイトル解析ロジック（第一段階：記号での分割）
       if (rawTitle.includes(" / ")) {
         const parts = rawTitle.split(" / ");
         title = parts[0].trim();
@@ -338,7 +343,6 @@ export async function fetchYoutubePlaylist(url: string) {
         }
       }
 
-      // MV特有の不要な文字列を綺麗にお掃除
       title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
                    .replace(/【.*?】/g, "")
                    .replace(/\[.*?\]/g, "")
@@ -347,26 +351,20 @@ export async function fetchYoutubePlaylist(url: string) {
       
       artist = artist.replace(/Official|Channel/gi, "").trim();
       
-      // チャンネル名の掃除（「公式」も追加！）
       const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
 
-      // 決定版のアーティスト名と曲名
       const finalArtist = artist || cleanChannelName;
       let finalTitle = title;
 
-      // 曲名の中にアーティスト名が含まれていたら削り取る
-      // （※曲名とアーティスト名が完全に同じ場合＝「アーティスト名の自己紹介動画」などは除外）
       if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
         finalTitle = finalTitle.replace(finalArtist, "").trim();
-        // 削った後に残ったゴミ（先頭や末尾のスペース、ハイフン、スラッシュなど）を掃除
         finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
       }
 
-      // 重複チェック
       const isDuplicate = existingUrls.includes(youtubeUrl);
 
       return {
-        title: finalTitle || rawTitle, // もし削りすぎて空になったら元のタイトルを復活
+        title: finalTitle || rawTitle,
         artist: finalArtist || "不明なアーティスト",
         youtubeUrl,
         status: "LEARNED",
@@ -377,13 +375,13 @@ export async function fetchYoutubePlaylist(url: string) {
         selected: !isDuplicate, 
         isDuplicate,            
       };
-    }).filter(Boolean); // null を除外
+    }).filter(Boolean);
 
     return { playlistTitle, songs };
 
-  } catch (error) {
-    console.error("YouTube API Error:", error);
-    throw new Error("YouTubeからのデータ取得に失敗しました。");
+  } catch (error: any) {
+    console.error("YouTube System Error:", error);
+    return { error: "システムエラーが発生しました。取得に失敗しました。" };
   }
 }
 

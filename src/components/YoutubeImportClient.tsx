@@ -36,24 +36,32 @@ export function YoutubeImportClient() {
     startTransition(async () => {
       try {
         const data = await fetchYoutubePlaylist(url);
-        const previewData = data.songs.map((s: any, i: number) => ({
-          ...s,
-          id: `temp-${i}`,
-          status: "LEARNED",
-        }));
-        setSongs(previewData);
-        setPlaylistTitle(data.playlistTitle);
-        setListName(data.playlistTitle);
 
-        // 重複チェック！登録済みの曲数を数え、1曲以上あればモーダルを出す
-        const dupes = previewData.filter((s: any) => s.isDuplicate).length;
-        if (dupes > 0) {
-          setDuplicateCount(dupes);
-          setShowDuplicateModal(true);
+        // サーバーからエラーが返ってきたら、画面に表示して処理をストップ
+        if (data.error) {
+          setError(data.error);
+          return;
         }
-        
+
+        // エラーがない場合のみ、songsの処理に進む
+        if (data.songs) {
+          const previewData = data.songs.map((s: any, i: number) => ({
+            ...s,
+            id: `temp-${i}`,
+            status: "LEARNED",
+          }));
+          setSongs(previewData);
+          setPlaylistTitle(data.playlistTitle);
+          setListName(data.playlistTitle);
+
+          const dupes = previewData.filter((s: any) => s.isDuplicate).length;
+          if (dupes > 0) {
+            setDuplicateCount(dupes);
+            setShowDuplicateModal(true);
+          }
+        }
       } catch (err: any) {
-        setError(err.message || "取得に失敗しました。");
+        setError(err.message || "予期せぬエラーが発生しました。");
       }
     });
   };
@@ -118,24 +126,41 @@ export function YoutubeImportClient() {
 
   return (
     <div className="space-y-6 pb-12 relative">
-      
       {/* 重複お知らせモーダル */}
       {showDuplicateModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4">
           <div className="bg-card border border-border rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl animate-in zoom-in-95 duration-200">
             <div className="flex justify-center mb-5">
               <div className="bg-amber-500/10 p-4 rounded-full text-amber-500">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-10 h-10">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2.5}
+                  stroke="currentColor"
+                  className="w-10 h-10"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
                 </svg>
               </div>
             </div>
-            <h3 className="text-xl font-black text-center text-foreground mb-3">登録済みの曲があります！</h3>
+            <h3 className="text-xl font-black text-center text-foreground mb-3">
+              登録済みの曲があります！
+            </h3>
             <p className="text-sm text-muted-foreground font-bold text-center mb-6 leading-relaxed">
-              プレイリスト内にすでに登録済みの曲が <span className="text-amber-500 text-lg mx-1">{duplicateCount}</span> 曲含まれていました。<br/>
+              プレイリスト内にすでに登録済みの曲が{" "}
+              <span className="text-amber-500 text-lg mx-1">
+                {duplicateCount}
+              </span>{" "}
+              曲含まれていました。
+              <br />
               重複を防ぐため、追加チェックを外しています！
             </p>
-            <button 
+            <button
               onClick={() => setShowDuplicateModal(false)}
               className="w-full bg-foreground text-background hover:bg-muted-foreground font-black py-3.5 rounded-xl shadow-md transition-all text-lg"
             >

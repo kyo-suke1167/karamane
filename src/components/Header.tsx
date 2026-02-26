@@ -100,13 +100,13 @@ export default function Header({ currentUser }: Props) {
                           {displayName}さん
                         </div>
 
-                        {/* 🦁 新機能：一括インポートへの導線！ */}
+                        {/* 一括インポート */}
                         <Link
                           href="/songs/import"
                           onClick={() => setIsMenuOpen(false)}
                           className="flex items-center gap-2 w-full text-left px-4 py-3 text-sm font-bold text-primary bg-primary/5 hover:bg-primary/10 transition"
                         >
-                          YouTubeから一括追加
+                          YouTubeから曲を一括追加
                         </Link>
 
                         <Link
