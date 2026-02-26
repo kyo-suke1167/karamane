@@ -8,13 +8,14 @@ import { SetlistEntryWithSong } from "@/types";
 
 type Props = {
   entry: SetlistEntryWithSong;
+  index: number;
   isEditMode: boolean;
   isSelected: boolean;
   onToggleSelect: (id: number) => void;
   setlistId: number;
 };
 
-export function SortableItem({ entry, isEditMode, isSelected, onToggleSelect, setlistId }: Props) {
+export function SortableItem({ entry, index, isEditMode, isSelected, onToggleSelect, setlistId }: Props) {
   const {
     attributes,
     listeners,
@@ -55,9 +56,9 @@ export function SortableItem({ entry, isEditMode, isSelected, onToggleSelect, se
               )}
             </div>
           ) : (
-            // 通常モード: ステータスアイコン
-            <div className={`w-8 h-8 rounded-full border flex items-center justify-center shadow-sm ${statusStyle.badgeColor}`}>
-              <div className="w-4 h-4 flex items-center justify-center">{statusStyle.icon}</div>
+            // 通常モード :　トラック番号
+            <div className={`w-8 h-8 rounded-full border flex items-center justify-center shadow-sm bg-muted border-border font-black text-foreground text-sm`}>
+              {index + 1}
             </div>
           )}
         </div>

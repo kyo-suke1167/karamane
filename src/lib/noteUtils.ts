@@ -38,7 +38,7 @@ export const NOTE_OPTIONS = Array.from({ length: 60 }, (_, i) => {
   const id = i + 33; // 33(lowA) スタート
   return {
     id: id,
-    label: `${getNoteName(id)} (${id})`,
+    label: getNoteName(id),
     value: id,
   };
 });

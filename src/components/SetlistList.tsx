@@ -2,10 +2,11 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setlistSchema, type SetlistSchema } from "@/lib/schema";
-import { createSetlist, deleteSetlist } from "@/app/actions";
+import { createSetlist, deleteSetlist, updateSetlist } from "@/app/actions";
 
 type Setlist = {
   id: number;
@@ -16,7 +17,9 @@ type Setlist = {
 };
 
 export function SetlistList({ setlists }: { setlists: Setlist[] }) {
+  const router = useRouter(); // 🦁 追加
   const [isOpen, setIsOpen] = useState(false);
+  const [editId, setEditId] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
 
   const {
@@ -30,9 +33,33 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
     mode: "onChange",
   });
 
+  // 新規作成ボタンを押した時
+  const openCreateModal = () => {
+    setEditId(null);
+    reset({ title: "", description: "" });
+    setIsOpen(true);
+  };
+
+  // えんぴつボタン（編集）を押した時
+  const openEditModal = (e: React.MouseEvent, list: Setlist) => {
+    e.preventDefault(); // Linkの遷移を防ぐお！
+    e.stopPropagation();
+    setEditId(list.id);
+    reset({ title: list.title, description: list.description || "" });
+    setIsOpen(true);
+  };
+
+  // 保存処理（新規作成・編集を判定）
   const onSubmit = (data: SetlistSchema) => {
     startTransition(async () => {
-      await createSetlist(data);
+      if (editId) {
+        // 編集モード
+        await updateSetlist(editId, data);
+        router.refresh(); // 最新のデータに更新
+      } else {
+        // 新規作成モード
+        await createSetlist(data);
+      }
       setIsOpen(false);
       reset();
     });
@@ -56,7 +83,7 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
           セットリスト
         </h1>
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={openCreateModal}
           className="bg-primary hover:bg-primary-hover text-primary-foreground text-sm font-bold px-4 py-2 rounded-full shadow-md flex items-center gap-1 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
@@ -82,8 +109,19 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
               className="block bg-card p-5 rounded-xl shadow-sm border border-border hover:border-primary transition-colors relative group"
             >
               <div className="flex justify-between items-start mb-2">
-                {/* タイトル */}
-                <h3 className="font-bold text-lg text-foreground line-clamp-1">{list.title}</h3>
+                {/* タイトルと編集ボタンを並べる */}
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <h3 className="font-bold text-lg text-foreground line-clamp-1">{list.title}</h3>
+                  <button
+                    onClick={(e) => openEditModal(e, list)}
+                    className="text-muted-foreground/40 hover:text-primary transition-colors z-10 p-1 shrink-0"
+                    title="タイトルと詳細を編集"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                      <path d="M2.695 14.763l-1.262 3.154a.5.5 0 00.65.65l3.155-1.262a4 4 0 001.343-.885L17.5 5.5a2.121 2.121 0 00-3-3L3.58 13.42a4 4 0 00-.885 1.343z" />
+                    </svg>
+                  </button>
+                </div>
                 {/* 曲数バッジ */}
                 <span className="bg-primary/10 text-primary border border-primary/20 text-xs font-bold px-2 py-1 rounded-md whitespace-nowrap ml-2 transition-colors">
                   {list._count.entries}曲
@@ -120,11 +158,13 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
         )}
       </div>
 
-      {/* モーダル (ポップアップ) */}
+      {/* モーダル (新規作成＆編集 兼用) */}
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity">
           <div className="bg-card border border-border w-full max-w-sm rounded-2xl p-6 shadow-2xl animate-in zoom-in-95 duration-200 transition-colors">
-            <h2 className="text-xl font-bold mb-4 text-center text-foreground">新しいセットリスト</h2>
+            <h2 className="text-xl font-bold mb-4 text-center text-foreground">
+              {editId ? "セットリストの編集" : "新しいセットリスト"}
+            </h2>
             
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div>
@@ -165,7 +205,7 @@ export function SetlistList({ setlists }: { setlists: Setlist[] }) {
                       ? "bg-muted text-muted-foreground cursor-not-allowed" 
                       : "bg-primary hover:bg-primary-hover text-primary-foreground"}`}
                 >
-                  {isPending ? "作成中..." : "作成する"}
+                  {isPending ? "保存中..." : editId ? "保存する" : "作成する"}
                 </button>
               </div>
             </form>

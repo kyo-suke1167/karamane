@@ -138,10 +138,11 @@ export function SetlistDetail({ setlist, allSongs }: { setlist: SetlistWithRelat
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
             <div className="space-y-2 px-1">
-              {items.map((entry) => (
+              {items.map((entry, index) => (
                 <SortableItem
                   key={entry.id}
                   entry={entry}
+                  index={index}
                   isEditMode={isEditMode}
                   isSelected={selectedIds.includes(entry.id)}
                   onToggleSelect={handleToggleSelect}

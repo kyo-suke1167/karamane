@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { getNoteName, getNoteColor } from "@/lib/noteUtils";
 import { getStatusStyle } from "@/lib/statusUtils";
 import { HomeFilters } from "./HomeFilters";
 import { SongStatus } from "@/generated/prisma";
 
-// 曲データの型定義
 type SongWithUser = {
   id: number;
   title: string;
@@ -25,16 +24,17 @@ type Props = {
   userName?: string;
 };
 
+const ITEMS_PER_PAGE = 20;
+
 export function ClientSongList({ initialSongs, userName }: Props) {
-  // 検索条件の状態
   const [filterQuery, setFilterQuery] = useState("");
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
+  const [sortKey, setSortKey] = useState("title-asc");
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // フィルタリング & 固定ソート (曲名順)
   const filteredSongs = useMemo(() => {
     let result = [...initialSongs];
 
-    // 1. 文字検索
     if (filterQuery) {
       const lowerQ = filterQuery.toLowerCase();
       result = result.filter(
@@ -44,23 +44,57 @@ export function ClientSongList({ initialSongs, userName }: Props) {
       );
     }
 
-    // 2. ステータス絞り込み
     if (filterStatuses.length > 0) {
       result = result.filter((song) => filterStatuses.includes(song.status));
     }
 
-    // 3. ソート (常に曲名順)
     result.sort((a, b) => {
-      // 日本語のあいうえお順に対応して比較
-      return a.title.localeCompare(b.title, "ja");
+      switch (sortKey) {
+        case "title-asc":
+          return a.title.localeCompare(b.title, "ja");
+        case "artist-asc":
+          return a.artist.localeCompare(b.artist, "ja");
+        case "createdAt-desc":
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        case "createdAt-asc":
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        default:
+          return 0;
+      }
     });
 
     return result;
-  }, [initialSongs, filterQuery, filterStatuses]);
+  }, [initialSongs, filterQuery, filterStatuses, sortKey]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterQuery, filterStatuses, sortKey]);
+
+  const totalPages = Math.ceil(filteredSongs.length / ITEMS_PER_PAGE);
+  const paginatedSongs = filteredSongs.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  // ページ番号生成する
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 5) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, "...", totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, "...", totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
+    }
+    return pages;
+  };
 
   return (
     <div>
-      {/* ヘッダーエリア */}
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
           <div>
@@ -80,15 +114,14 @@ export function ClientSongList({ initialSongs, userName }: Props) {
           </Link>
         </div>
 
-        {/* 検索フィルター */}
         <HomeFilters 
           onSearchChange={setFilterQuery}
           onStatusChange={setFilterStatuses}
+          onSortChange={setSortKey}
         />
         
       </div>
 
-      {/* 持ち歌リスト */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {filteredSongs.length === 0 ? (
           <div className="col-span-2 text-center py-20 bg-muted rounded-2xl border-2 border-dashed border-border">
@@ -104,7 +137,7 @@ export function ClientSongList({ initialSongs, userName }: Props) {
             )}
           </div>
         ) : (
-          filteredSongs.map((song) => {
+          paginatedSongs.map((song) => {
             const statusStyle = getStatusStyle(song.status);
             return (
               <Link
@@ -146,6 +179,55 @@ export function ClientSongList({ initialSongs, userName }: Props) {
           })
         )}
       </div>
+
+      {/* ページネーション・コントローラー (番号式) */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-1.5 sm:gap-2 mt-8 mb-4">
+          
+          {/* 前へボタン */}
+          <button
+            onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-card border border-border text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+              <path fillRule="evenodd" d="M12.79 5.23a.75.75 0 01-.02 1.06L8.832 10l3.938 3.71a.75.75 0 11-1.04 1.08l-4.5-4.25a.75.75 0 010-1.08l4.5-4.25a.75.75 0 011.06.02z" clipRule="evenodd" />
+            </svg>
+          </button>
+          
+          {/* 番号ボタンたち */}
+          {getPageNumbers().map((page, index) => (
+            page === "..." ? (
+              <span key={`ellipsis-${index}`} className="flex items-center justify-center w-8 text-muted-foreground font-bold">
+                ...
+              </span>
+            ) : (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page as number)}
+                className={`flex items-center justify-center w-10 h-10 rounded-xl font-bold transition-all shadow-sm text-sm sm:text-base ${
+                  currentPage === page
+                    ? "bg-primary text-primary-foreground border-primary scale-110"
+                    : "bg-card border-border text-foreground hover:bg-muted hover:border-muted-foreground/30"
+                } border`}
+              >
+                {page}
+              </button>
+            )
+          ))}
+          
+          {/* 次へボタン */}
+          <button
+            onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={currentPage === totalPages}
+            className="flex items-center justify-center w-10 h-10 rounded-xl bg-card border border-border text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors shadow-sm"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+              <path fillRule="evenodd" d="M7.21 14.77a.75.75 0 01.02-1.06L11.168 10 7.23 6.29a.75.75 0 111.04-1.08l4.5 4.25a.75.75 0 010 1.08l-4.5 4.25a.75.75 0 01-1.06-.02z" clipRule="evenodd" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
