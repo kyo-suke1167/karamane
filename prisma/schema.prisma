@@ -40,6 +40,8 @@ model User {
   songs         Song[]
   setlists      Setlist[] // セットリストへのリンク
 
+  singingRecords SingingRecord[]
+
   @@map("users")
 }
 
@@ -68,6 +70,8 @@ model Song {
 
   // リレーション (セットリストの中身へのリンク)
   setlistEntries SetlistEntry[]
+
+  singingRecords SingingRecord[]
 
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
@@ -118,4 +122,29 @@ model SetlistEntry {
   // 検索を速くするためのインデックス
   @@index([setlistId])
   @@map("setlist_entries")
+}
+
+// ==========================================
+// カラオケ日記 (歌唱記録)
+// ==========================================
+model SingingRecord {
+  id          Int       @id @default(autoincrement())
+  
+  // 誰が歌ったか
+  userId      String    @map("user_id")
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // どの曲を歌ったか
+  songId      Int       @map("song_id")
+  song        Song      @relation(fields: [songId], references: [id], onDelete: Cascade)
+  
+  // 記録データ
+  score       Float?    // 点数（90.5など）
+  key         Int?      // キー設定
+  memo        String?   // 感想・メモ
+  
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  @@map("singing_records")
 }

@@ -16,6 +16,7 @@ import {
 } from "@/lib/schema";
 
 import { SongStatus } from "@/generated/prisma";
+import { revalidatePath } from "next/cache";
 
 // ==========================================
 // ユーザー登録
@@ -564,4 +565,49 @@ export async function deleteSongs(songIds: number[]) {
       userId: session.user.id,
     },
   });
+}
+
+// ==========================================
+// カラオケ日記（歌唱記録）用の機能
+// ==========================================
+
+// 1. 日記（記録）を追加する関数
+export async function addSingingRecord(data: {
+  songId: number;
+  score?: number | null;
+  key?: number | null;
+  memo?: string | null;
+}) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  await prisma.singingRecord.create({
+    data: {
+      userId: session.user.id,
+      songId: data.songId,
+      score: data.score,
+      key: data.key,
+      memo: data.memo,
+    },
+  });
+
+  // 曲の詳細画面を即座にリフレッシュして新しい記録を表示させる
+  revalidatePath(`/songs/${data.songId}`);
+}
+
+// 2. 日記（記録）を削除する関数
+export async function deleteSingingRecord(recordId: number, songId: number) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  await prisma.singingRecord.delete({
+    where: {
+      id: recordId,
+      // 他人の記録を間違えて消さないための安全装置
+      userId: session.user.id, 
+    },
+  });
+
+  // こちらも即座に画面をリフレッシュ
+  revalidatePath(`/songs/${songId}`);
 }

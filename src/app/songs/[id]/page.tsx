@@ -7,6 +7,7 @@ import { notFound } from "next/navigation";
 import KeyController from "@/components/vocal-range/KeyController";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import SingingRecordSection from "@/components/SingingRecordSection";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -29,7 +30,12 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
 
   const song = await prisma.song.findUnique({
     where: { id: songId },
-    include: { user: true },
+    include: { 
+      user: true,
+      singingRecords: {
+        orderBy: { createdAt: "desc" }
+      }
+    },
   });
 
   if (!song) {
@@ -165,6 +171,9 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
               </div>
             </div>
           )}
+
+          {/* カラオケ日記セクション */}
+          <SingingRecordSection songId={song.id} records={song.singingRecords} />
 
           {/* メタ情報 */}
           <div className="border-t border-border-light pt-6 flex flex-col gap-2 text-sm text-muted-foreground">
