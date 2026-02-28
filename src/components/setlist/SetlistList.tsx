@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { setlistSchema, type SetlistSchema } from "@/lib/schema";
-import { createSetlist, deleteSetlist, updateSetlist } from "@/app/actions";
+import { createSetlist, deleteSetlist, updateSetlist } from "@/actions/setlist";
 
 type Setlist = {
   id: number;

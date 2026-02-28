@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { fetchYoutubePlaylist, saveImportedSongs } from "@/app/actions";
+import { fetchYoutubePlaylist, saveImportedSongs } from "@/actions/youtube";
 import { SongStatus } from "@/generated/prisma";
 
 type PreviewSong = {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from "react";
 import { getStatusStyle } from "@/lib/statusUtils";
-import { getUserSongsForModal, deleteSongs } from "@/app/actions";
+import { getUserSongsForModal, deleteSongs } from "@/actions/song";
 import { useRouter } from "next/navigation";
 import { SongStatus } from "@/generated/prisma";
 

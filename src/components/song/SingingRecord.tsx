@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { addSingingRecord, deleteSingingRecord } from "@/app/actions";
+import { addSingingRecord, deleteSingingRecord } from "@/actions/record";
 import {
   LineChart,
   Line,

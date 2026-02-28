@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useTransition } from "react";
 import { AMDF } from "pitchfinder";
 import { getNoteName as getKaraokeNoteName } from "@/lib/noteUtils";
-import { saveVocalRange } from "@/app/actions";
+import { saveVocalRange } from "@/actions/user";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -108,7 +108,7 @@ export default function PitchTestPage() {
           if (currentNoteNum === sustainedNoteRef.current) {
             sustainCountRef.current += 1;
             
-            // 規定の回数（MIN_SUSTAIN_FRAMES）キープできたら初めて記録する！
+            // 規定の回数（MIN_SUSTAIN_FRAMES）キープできたら初めて記録する
             if (sustainCountRef.current >= MIN_SUSTAIN_FRAMES) {
               setLowestNote(prev => (prev === null || currentNoteNum < prev) ? currentNoteNum : prev);
               setHighestNote(prev => (prev === null || currentNoteNum > prev) ? currentNoteNum : prev);
@@ -272,8 +272,8 @@ export default function PitchTestPage() {
                 onClick={startListening} 
                 className={`flex-1 font-bold py-3 rounded-xl shadow-md transition-colors ${
                   (lowestNote !== null || highestNote !== null)
-                    ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30" // 🦁 記録あり：ストップと同じ赤色！
-                    : "bg-primary text-primary-foreground hover:bg-primary-hover" // 🦁 記録なし：最初のプライマリー色！
+                    ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30"
+                    : "bg-primary text-primary-foreground hover:bg-primary-hover"
                 }`}
               >
                 {(lowestNote !== null || highestNote !== null) ? "測定を再開" : "測定をはじめる"}

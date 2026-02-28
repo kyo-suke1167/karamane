@@ -24,7 +24,7 @@ export default function VocalRangeBar({ songMin, songMax, userMin, userMax, curr
     return Math.max(0, Math.min(100, pos));
   };
 
-  // 曲の音域 (キー変更を適用！)
+  // 曲の音域 (キー変更を適用)
   const currentSongMin = songMin + currentKey;
   const currentSongMax = songMax + currentKey;
 

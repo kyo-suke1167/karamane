@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { updateProfile } from "@/app/actions";
+import { updateProfile } from "@/actions/user";
 import { NOTE_OPTIONS } from "@/lib/noteUtils";
 import { User } from "@/generated/prisma"; 
 import { useRouter } from "next/navigation";

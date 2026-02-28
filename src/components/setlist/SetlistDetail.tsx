@@ -22,7 +22,7 @@ import {
   addSongsToSetlist, 
   removeSongsFromSetlist,
   reorderSetlist,
-} from "@/app/actions";
+} from "@/actions/setlist";
 
 import { SortableItem } from "./SortableItem";
 import { AddSongModal } from "./AddSongModal";

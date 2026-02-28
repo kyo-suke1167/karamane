@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { updateSongKey } from "@/app/actions";
+import { updateSongKey } from "@/actions/song";
 import VocalRangeBar from "./VocalRangeBar";
-import Link from "next/link"; // 🦁 Linkをインポート！
+import Link from "next/link";
 
 type Props = {
   songId: number;
@@ -93,7 +93,6 @@ export default function KeyController({
           currentKey={currentKey}
         />
       ) : (
-        /* 🦁 キョン氏の元のデザインを活かして、控えめなボタンを横に添えたお！ */
         <div className="bg-card/50 h-16 rounded-lg flex items-center justify-center text-muted-foreground text-xs mb-4 border border-border gap-3">
           <span>音域データがありません</span>
           <Link 

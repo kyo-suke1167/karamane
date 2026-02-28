@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { registerUser, checkEmail } from "@/app/actions";
+import { registerUser, checkEmail } from "@/actions/user";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";

@@ -1,6 +1,7 @@
 "use client";
 
-import { createSong, fetchYoutubeVideo } from "@/app/actions";
+import { createSong } from "@/actions/song";
+import { fetchYoutubeVideo } from "@/actions/youtube";
 import Link from "next/link";
 import { NOTE_OPTIONS } from "@/lib/noteUtils";
 import { useForm } from "react-hook-form";
