@@ -45,8 +45,12 @@ export default function SignupPage() {
         // 問題なければ登録実行
         await registerUser(data);
         router.push("/login?registered=true");
-      } catch (e: any) {
-        setServerError(e.message || "登録に失敗しました");
+      } catch (error: unknown) {
+        if (error instanceof Error) {
+          setServerError(error.message);
+        } else {
+          setServerError("登録に失敗しました");
+        }
       }
     });
   };

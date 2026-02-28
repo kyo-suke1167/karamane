@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ClientSongList } from "@/components/ClientSongList.tsx";
+import { ClientSongList } from "@/components/ClientSongList";
 import VocalRangePrompt from "@/components/VocalRangePrompt";
 
 export default async function Home() {
