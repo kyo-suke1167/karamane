@@ -3,18 +3,7 @@
 import { useState, useTransition } from "react";
 import { fetchYoutubePlaylist, saveImportedSongs } from "@/actions/youtube";
 import { SongStatus } from "@/generated/prisma";
-
-type PreviewSong = {
-  id: string;
-  selected: boolean;
-  title: string;
-  artist: string;
-  youtubeUrl: string;
-  status: SongStatus;
-  key: number;
-  memo: string;
-  isDuplicate?: boolean;
-};
+import type { PreviewSong } from "@/types";
 
 export function YoutubeImportClient() {
   const [url, setUrl] = useState("");
