@@ -4,10 +4,10 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
+import type { PrismaClient } from "@prisma/client";
 
 export const authOptions: NextAuthOptions = {
-  // @ts-expect-error NextAuthとPrismaの型定義の不一致を回避
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma as unknown as PrismaClient),
   session: {
     strategy: "jwt",
   },

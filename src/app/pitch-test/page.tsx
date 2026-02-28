@@ -34,7 +34,7 @@ export default function PitchTestPage() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const requestRef = useRef<number | null>(null);
-  const detectPitchRef = useRef<any>(null);
+  const detectPitchRef = useRef<((float32Array: Float32Array) => number | null) | null>(null);
 
   const sustainedNoteRef = useRef<number | null>(null);
   const sustainCountRef = useRef<number>(0);
@@ -45,7 +45,7 @@ export default function PitchTestPage() {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
       audioContextRef.current = audioCtx;
       
       const analyser = audioCtx.createAnalyser();
@@ -63,7 +63,7 @@ export default function PitchTestPage() {
 
       setIsListening(true);
       updatePitch();
-    } catch (err) {
+    } catch (err: unknown) {
       console.error("マイクへのアクセスに失敗しました:", err);
       alert("マイクの使用を許可してください！");
     }
@@ -156,7 +156,7 @@ export default function PitchTestPage() {
         await saveVocalRange(lowestNote, highestNote);
         setSaveMessage("プロフィールに音域を保存しました！");
         router.refresh();
-      } catch (error) {
+      } catch {
         setSaveMessage("保存に失敗しました...");
       }
     });

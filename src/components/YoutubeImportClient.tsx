@@ -19,7 +19,6 @@ type PreviewSong = {
 export function YoutubeImportClient() {
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
-  const [playlistTitle, setPlaylistTitle] = useState("");
   const [songs, setSongs] = useState<PreviewSong[]>([]);
 
   const [createSetlist, setCreateSetlist] = useState(true);
@@ -45,23 +44,27 @@ export function YoutubeImportClient() {
 
         // エラーがない場合のみ、songsの処理に進む
         if (data.songs) {
-          const previewData = data.songs.map((s: any, i: number) => ({
+          const previewData = data.songs.map((s: Omit<PreviewSong, "id" | "status">, i: number) => ({
             ...s,
             id: `temp-${i}`,
             status: "LEARNED",
-          }));
+          })) as PreviewSong[];
+
           setSongs(previewData);
-          setPlaylistTitle(data.playlistTitle);
           setListName(data.playlistTitle);
 
-          const dupes = previewData.filter((s: any) => s.isDuplicate).length;
+          const dupes = previewData.filter((s: PreviewSong) => s.isDuplicate).length;
           if (dupes > 0) {
             setDuplicateCount(dupes);
             setShowDuplicateModal(true);
           }
         }
-      } catch (err: any) {
-        setError(err.message || "予期せぬエラーが発生しました。");
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError("予期せぬエラーが発生しました。");
+        }
       }
     });
   };
@@ -77,7 +80,7 @@ export function YoutubeImportClient() {
     );
   };
 
-  const updateSong = (id: string, field: keyof PreviewSong, value: any) => {
+  const updateSong = <K extends keyof PreviewSong>(id: string, field: K, value: PreviewSong[K]) => {
     setSongs(
       songs.map((song) =>
         song.id === id ? { ...song, [field]: value } : song,
@@ -259,7 +262,7 @@ export function YoutubeImportClient() {
                   <select
                     value={song.status}
                     onChange={(e) =>
-                      updateSong(song.id, "status", e.target.value)
+                      updateSong(song.id, "status", e.target.value as SongStatus)
                     }
                     className="w-28 bg-background border border-border rounded-md px-2 py-1 text-xs font-bold text-muted-foreground"
                   >
@@ -352,7 +355,7 @@ export function YoutubeImportClient() {
                     <select
                       value={song.status}
                       onChange={(e) =>
-                        updateSong(song.id, "status", e.target.value)
+                        updateSong(song.id, "status", e.target.value as SongStatus)
                       }
                       className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-bold"
                     >

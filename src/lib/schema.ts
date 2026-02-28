@@ -44,8 +44,8 @@ export const songSchema = z.object({
   artist: z.string().min(1, "アーティスト名は必須です").max(100),
   youtubeUrl: z.string().url("URLの形式が正しくありません").or(z.literal("")).optional(),
   status: z.enum(["PRACTICING", "LEARNED", "MASTERED"]),
-  minNoteId: z.coerce.number().nullable().optional(),
-  maxNoteId: z.coerce.number().nullable().optional(),
+  minNoteId: z.number().nullable().optional(),
+  maxNoteId: z.number().nullable().optional(),
   memo: z.string().max(500).optional(),
 }).refine((data) => {
   // 両方設定されている場合のみ大小をチェック
@@ -65,8 +65,8 @@ export type SongSchema = z.infer<typeof songSchema>;
 // ==========================================
 export const profileSchema = z.object({
   name: z.string().min(1, "名前を入力してください").max(50),
-  minNoteId: z.coerce.number().nullable().optional(),
-  maxNoteId: z.coerce.number().nullable().optional(),
+  minNoteId: z.number().nullable().optional(),
+  maxNoteId: z.number().nullable().optional(),
 }).refine((data) => {
   if (data.minNoteId != null && data.maxNoteId != null) {
     return data.minNoteId <= data.maxNoteId;
@@ -76,8 +76,6 @@ export const profileSchema = z.object({
   message: "最低音は最高音より低く設定してください",
   path: ["minNoteId"],
 });
-
-export type ProfileSchema = z.infer<typeof profileSchema>;
 
 // ==========================================
 // セットリスト (Setlist)

@@ -5,14 +5,13 @@ import { redirect } from "next/navigation";
 import ProfileForm from "@/components/ProfileForm";
 
 export default async function ProfileSettingsPage() {
-  // 1. セッションチェック
   const session = await getServerSession(authOptions);
   
   if (!session || !session.user) {
     redirect("/login");
   }
 
-  // 2. 最新のユーザー情報を取得
+  // 最新のユーザー情報と連携済みアカウント情報を取得
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     include: { accounts: true },
@@ -22,7 +21,7 @@ export default async function ProfileSettingsPage() {
     return <div className="text-center mt-10 text-foreground">ユーザーが見つかりません...</div>;
   }
 
-  // Googleアカウントが連携済みかどうか判定
+  // Googleアカウントが連携済みかどうかを判定
   const isLinkedWithGoogle = user.accounts.some(
     (acc) => acc.provider === "google"
   );
@@ -35,6 +34,7 @@ export default async function ProfileSettingsPage() {
       <p className="text-muted-foreground mb-8">
         プロフィールや音域を変更できます
       </p>
+
       <ProfileForm user={user} isLinkedWithGoogle={isLinkedWithGoogle} />
     </div>
   );

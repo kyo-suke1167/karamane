@@ -5,14 +5,14 @@ import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
-import { 
-  signupSchema, 
-  songSchema, 
-  profileSchema, 
+import {
+  signupSchema,
+  songSchema,
+  profileSchema,
   setlistSchema,
   type SignupSchema,
   type SongSchema,
-  type SetlistSchema
+  type SetlistSchema,
 } from "@/lib/schema";
 
 import { SongStatus } from "@/generated/prisma";
@@ -62,7 +62,7 @@ export async function createSong(data: SongSchema) {
       userId: session.user.id,
     },
   });
-  
+
   redirect("/");
 }
 
@@ -213,18 +213,18 @@ export async function reorderSetlist(items: { id: number; order: number }[]) {
       prisma.setlistEntry.update({
         where: { id: item.id },
         data: { order: item.order },
-      })
-    )
+      }),
+    ),
   );
 }
 
 // 7. 一括削除機能
 export async function removeSongsFromSetlist(entryIds: number[]) {
   if (entryIds.length === 0) return;
-  
+
   await prisma.setlistEntry.deleteMany({
-    where: { 
-      id: { in: entryIds }
+    where: {
+      id: { in: entryIds },
     },
   });
 }
@@ -259,9 +259,9 @@ export async function saveVocalRange(minNoteId: number, maxNoteId: number) {
 
   await prisma.user.update({
     where: { id: session.user.id },
-    data: { 
-      minNoteId, 
-      maxNoteId 
+    data: {
+      minNoteId,
+      maxNoteId,
     },
   });
 }
@@ -276,12 +276,26 @@ function extractPlaylistId(url: string) {
   return match ? match[1] : null;
 }
 
+type YoutubePlaylistItem = {
+  snippet: {
+    title: string;
+    resourceId: { videoId: string };
+    videoOwnerChannelTitle?: string;
+    channelTitle?: string;
+  };
+};
+
 export async function fetchYoutubePlaylist(url: string) {
   const playlistId = extractPlaylistId(url);
-  if (!playlistId) return { error: "無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。" };
+  if (!playlistId)
+    return {
+      error:
+        "無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。",
+    };
 
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) return { error: "APIキーが設定されていません。管理者に連絡してください。" };
+  if (!apiKey)
+    return { error: "APIキーが設定されていません。管理者に連絡してください。" };
 
   // YouTube URLの重複チェック
   const session = await getServerSession(authOptions);
@@ -291,96 +305,123 @@ export async function fetchYoutubePlaylist(url: string) {
   if (userId) {
     const existingSongs = await prisma.song.findMany({
       where: { userId, youtubeUrl: { not: null } },
-      select: { youtubeUrl: true }
+      select: { youtubeUrl: true },
     });
-    existingUrls = existingSongs.map(s => s.youtubeUrl).filter(Boolean) as string[];
+    existingUrls = existingSongs
+      .map((s) => s.youtubeUrl)
+      .filter(Boolean) as string[];
   }
 
   try {
     // 1. プレイリスト自体の情報（タイトル）を取得
-    const playlistRes = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`, { cache: "no-store" });
+    const playlistRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${playlistId}&key=${apiKey}`,
+      { cache: "no-store" },
+    );
     const playlistData = await playlistRes.json();
-    
+
     // API側からエラーが返ってきた場合
     if (playlistData.error) {
       console.error("YouTube API Error:", playlistData.error);
       return { error: `YouTube APIエラー: ${playlistData.error.message}` };
     }
 
-    const playlistTitle = playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
+    const playlistTitle =
+      playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
 
     // 2. プレイリストの中身（動画リスト）を取得（最大50件）
-    const itemsRes = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`, { cache: "no-store" });
+    const itemsRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`,
+      { cache: "no-store" },
+    );
     const itemsData = await itemsRes.json();
 
-    if (!itemsData.items) return { error: "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。" };
+    if (!itemsData.items)
+      return {
+        error:
+          "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。",
+      };
 
     // 3. 動画データをKaramane用の曲データに変換＆タイトル解析
-    const songs = itemsData.items.map((item: any) => {
-      const rawTitle = item.snippet.title;
-      if (rawTitle === "Private video" || rawTitle === "Deleted video") return null;
+    const songs = itemsData.items
+      .map((item: YoutubePlaylistItem) => {
+        const rawTitle = item.snippet.title;
+        if (rawTitle === "Private video" || rawTitle === "Deleted video")
+          return null;
 
-      const videoId = item.snippet.resourceId.videoId;
-      const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-      
-      const channelTitle = item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle || "";
+        const videoId = item.snippet.resourceId.videoId;
+        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
 
-      let title = rawTitle;
-      let artist = "";
+        const channelTitle =
+          item.snippet.videoOwnerChannelTitle ||
+          item.snippet.channelTitle ||
+          "";
 
-      if (rawTitle.includes(" / ")) {
-        const parts = rawTitle.split(" / ");
-        title = parts[0].trim();
-        artist = parts[1].trim();
-      } else if (rawTitle.includes(" - ")) {
-        const parts = rawTitle.split(" - ");
-        artist = parts[0].trim();
-        title = parts[1].trim();
-      } else if (rawTitle.includes("「") && rawTitle.includes("」")) {
-        const match = rawTitle.match(/^(.*?)「(.*?)」/);
-        if (match) {
-          artist = match[1].trim();
-          title = match[2].trim();
+        let title = rawTitle;
+        let artist = "";
+
+        if (rawTitle.includes(" / ")) {
+          const parts = rawTitle.split(" / ");
+          title = parts[0].trim();
+          artist = parts[1].trim();
+        } else if (rawTitle.includes(" - ")) {
+          const parts = rawTitle.split(" - ");
+          artist = parts[0].trim();
+          title = parts[1].trim();
+        } else if (rawTitle.includes("「") && rawTitle.includes("」")) {
+          const match = rawTitle.match(/^(.*?)「(.*?)」/);
+          if (match) {
+            artist = match[1].trim();
+            title = match[2].trim();
+          }
         }
-      }
 
-      title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
-                   .replace(/【.*?】/g, "")
-                   .replace(/\[.*?\]/g, "")
-                   .replace(/[()（）]/g, "")
-                   .trim();
-      
-      artist = artist.replace(/Official|Channel/gi, "").trim();
-      
-      const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+        title = title
+          .replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+          .replace(/【.*?】/g, "")
+          .replace(/\[.*?\]/g, "")
+          .replace(/[()（）]/g, "")
+          .trim();
 
-      const finalArtist = artist || cleanChannelName;
-      let finalTitle = title;
+        artist = artist.replace(/Official|Channel/gi, "").trim();
 
-      if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
-        finalTitle = finalTitle.replace(finalArtist, "").trim();
-        finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
-      }
+        const cleanChannelName = channelTitle
+          .replace(/ - Topic|Official|Channel|公式/gi, "")
+          .trim();
 
-      const isDuplicate = existingUrls.includes(youtubeUrl);
+        const finalArtist = artist || cleanChannelName;
+        let finalTitle = title;
 
-      return {
-        title: finalTitle || rawTitle,
-        artist: finalArtist || "不明なアーティスト",
-        youtubeUrl,
-        status: "LEARNED",
-        key: 0,
-        minNoteId: null,
-        maxNoteId: null,
-        memo: "YouTubeからインポート",
-        selected: !isDuplicate, 
-        isDuplicate,            
-      };
-    }).filter(Boolean);
+        if (
+          finalArtist &&
+          finalTitle.includes(finalArtist) &&
+          finalTitle !== finalArtist
+        ) {
+          finalTitle = finalTitle.replace(finalArtist, "").trim();
+          finalTitle = finalTitle
+            .replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "")
+            .trim();
+        }
+
+        const isDuplicate = existingUrls.includes(youtubeUrl);
+
+        return {
+          title: finalTitle || rawTitle,
+          artist: finalArtist || "不明なアーティスト",
+          youtubeUrl,
+          status: "LEARNED",
+          key: 0,
+          minNoteId: null,
+          maxNoteId: null,
+          memo: "YouTubeからインポート",
+          selected: !isDuplicate,
+          isDuplicate,
+        };
+      })
+      .filter(Boolean);
 
     return { playlistTitle, songs };
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("YouTube System Error:", error);
     return { error: "システムエラーが発生しました。取得に失敗しました。" };
   }
@@ -389,7 +430,6 @@ export async function fetchYoutubePlaylist(url: string) {
 // ==========================================
 // YouTubeからの一括保存＆セトリ作成機能
 // ==========================================
-
 
 type ImportSongData = {
   title: string;
@@ -400,7 +440,10 @@ type ImportSongData = {
   memo: string;
 };
 
-export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: string) {
+export async function saveImportedSongs(
+  songs: ImportSongData[],
+  setlistTitle?: string,
+) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) throw new Error("ログインしてください");
   const userId = session.user.id;
@@ -420,8 +463,8 @@ export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: 
           memo: song.memo,
           userId,
         },
-      })
-    )
+      }),
+    ),
   );
 
   // 2. セトリ作成がON（タイトルがある）なら、セトリを作成
@@ -454,7 +497,9 @@ export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: 
 
 // 動画URLからVideoIDを抜き出すヘルパー関数
 function extractVideoId(url: string) {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^&?]+)/);
+  const match = url.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:.*v=|.*\/|.*embed\/))([^&?]+)/,
+  );
   return match ? match[1] : null;
 }
 
@@ -463,11 +508,15 @@ export async function fetchYoutubeVideo(url: string) {
   if (!videoId) return { error: "無効なYouTube動画URLです。" };
 
   const apiKey = process.env.YOUTUBE_API_KEY;
-  if (!apiKey) return { error: "APIキーが設定されていません。管理者に連絡してください。" };
+  if (!apiKey)
+    return { error: "APIキーが設定されていません。管理者に連絡してください。" };
 
   try {
     // cache: "no-store" を追加して常に最新の情報を取得
-    const res = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`, { cache: "no-store" });
+    const res = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet&id=${videoId}&key=${apiKey}`,
+      { cache: "no-store" },
+    );
     const data = await res.json();
 
     if (data.error) {
@@ -476,7 +525,9 @@ export async function fetchYoutubeVideo(url: string) {
     }
 
     if (!data.items || data.items.length === 0) {
-      return { error: "動画が見つかりませんでした。非公開か確認してください。" };
+      return {
+        error: "動画が見つかりませんでした。非公開か確認してください。",
+      };
     }
 
     const snippet = data.items[0].snippet;
@@ -505,23 +556,30 @@ export async function fetchYoutubeVideo(url: string) {
     }
 
     // MV特有の不要な文字列を綺麗にお掃除
-    title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
-                 .replace(/【.*?】/g, "")
-                 .replace(/\[.*?\]/g, "")
-                 .replace(/[()（）]/g, "")
-                 .trim();
-    
+    title = title
+      .replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+      .replace(/【.*?】/g, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/[()（）]/g, "")
+      .trim();
+
     artist = artist.replace(/Official|Channel/gi, "").trim();
-    
+
     // チャンネル名の掃除（「公式」も追加！）
-    const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+    const cleanChannelName = channelTitle
+      .replace(/ - Topic|Official|Channel|公式/gi, "")
+      .trim();
 
     // 決定版のアーティスト名と曲名
     const finalArtist = artist || cleanChannelName;
     let finalTitle = title;
 
     // 曲名の中にアーティスト名が含まれていたら削り取る
-    if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
+    if (
+      finalArtist &&
+      finalTitle.includes(finalArtist) &&
+      finalTitle !== finalArtist
+    ) {
       finalTitle = finalTitle.replace(finalArtist, "").trim();
       finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
     }
@@ -531,8 +589,7 @@ export async function fetchYoutubeVideo(url: string) {
       title: finalTitle || rawTitle,
       artist: finalArtist || "不明なアーティスト",
     };
-
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("YouTube System Error:", error);
     return { error: "システムエラーが発生しました。取得に失敗しました。" };
   }
@@ -604,7 +661,7 @@ export async function deleteSingingRecord(recordId: number, songId: number) {
     where: {
       id: recordId,
       // 他人の記録を間違えて消さないための安全装置
-      userId: session.user.id, 
+      userId: session.user.id,
     },
   });
 

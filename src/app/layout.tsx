@@ -27,7 +27,7 @@ export default async function RootLayout({
   let currentUser = null;
   if (session?.user) {
     currentUser = await prisma.user.findUnique({
-      where: { id: (session.user as any).id },
+      where: { id: (session.user as { id: string }).id },
       select: { name: true, image: true }
     });
   }

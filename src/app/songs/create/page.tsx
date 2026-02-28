@@ -19,7 +19,7 @@ export default function CreateSongPage() {
     getValues,
     formState: { errors },
   } = useForm<SongSchema>({
-    resolver: zodResolver(songSchema) as any,
+    resolver: zodResolver(songSchema),
     defaultValues: {
       title: "",
       artist: "",
@@ -56,8 +56,12 @@ export default function CreateSongPage() {
       if (data.title) setValue("title", data.title, { shouldValidate: true });
       if (data.artist) setValue("artist", data.artist, { shouldValidate: true });
       
-    } catch (e: any) {
-      alert(e.message || "予期せぬエラーが発生しました。");
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        alert(error.message);
+      } else {
+        alert("予期せぬエラーが発生しました。");
+      }
     } finally {
       setIsFetchingUrl(false);
     }

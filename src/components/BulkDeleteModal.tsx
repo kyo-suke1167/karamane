@@ -4,12 +4,13 @@ import { useState, useEffect, useTransition } from "react";
 import { getStatusStyle } from "@/lib/statusUtils";
 import { getUserSongsForModal, deleteSongs } from "@/app/actions";
 import { useRouter } from "next/navigation";
+import { SongStatus } from "@/generated/prisma";
 
 type SongMin = {
   id: number;
   title: string;
   artist: string;
-  status: any;
+  status: SongStatus;
 };
 
 type Props = {
@@ -93,7 +94,7 @@ export function BulkDeleteModal({ isOpen, onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-card border border-border w-full max-w-sm h-[80vh] sm:h-150 rounded-2xl flex flex-col shadow-2xl relative transition-colors overflow-hidden">
         
-        {/* ヘッダー（赤色仕様！） */}
+        {/* ヘッダー */}
         <div className="p-4 border-b border-border-light flex justify-between items-center bg-card z-20 shrink-0">
           <h2 className="text-lg font-black text-foreground flex items-center gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 text-red-500">
@@ -161,7 +162,7 @@ export function BulkDeleteModal({ isOpen, onClose }: Props) {
                       : "bg-card border-transparent hover:border-border hover:bg-muted"}`}
                 >
                   <div className="flex items-center gap-3 overflow-hidden">
-                    {/* チェックボックス（赤色仕様） */}
+                    {/* チェックボックス */}
                     <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-colors shrink-0
                       ${isSelected ? "bg-red-500 border-red-500" : "border-border bg-background group-hover:border-red-500/50"}`}
                     >

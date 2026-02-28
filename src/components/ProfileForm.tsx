@@ -56,11 +56,9 @@ export default function ProfileForm({ user, isLinkedWithGoogle }: Props) {
     }
   };
 
-  // 連携ボタンを押した時の処理
   const handleGoogleLink = () => {
     setGoogleLoading(true);
-    // 連携が終わったらプロフィール画面に戻ってくる
-    signIn("google", { callbackUrl: "/profile" });
+    signIn("google", { callbackUrl: "/settings/profile" });
   };
 
   return (
