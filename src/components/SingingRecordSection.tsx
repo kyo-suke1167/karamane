@@ -174,7 +174,7 @@ export default function SingingRecordSection({ songId, records = [] }: Props) {
         </form>
       )}
 
-      {chartData.length >= 2 && (
+      {chartData.length >= 1 && (
         <div className="mb-6 bg-card border border-border rounded-xl p-4 shadow-sm animate-in fade-in">
           <h3 className="text-sm font-bold text-muted-foreground mb-4">点数の推移</h3>
           <div className="h-48 w-full">
@@ -189,7 +189,7 @@ export default function SingingRecordSection({ songId, records = [] }: Props) {
                   dy={10}
                 />
                 <YAxis 
-                  domain={['dataMin - 2', 'dataMax + 2']} 
+                  domain={['dataMin - 2', 100]} 
                   tick={{ fontSize: 12, fill: '#6b7280' }} 
                   axisLine={false} 
                   tickLine={false}
@@ -217,7 +217,7 @@ export default function SingingRecordSection({ songId, records = [] }: Props) {
       <div className="space-y-3">
         {records.length === 0 ? (
           <p className="text-center text-muted-foreground py-8 text-sm font-bold bg-muted/20 rounded-xl border border-dashed border-border-light">
-            まだ記録がありません。<br/>歌った結果を残して成長を実感しよう！<br/>点数二回以上登録でグラフが作成されるよ！
+            まだ記録がありません。<br/>歌った結果を残して成長を実感しよう！
           </p>
         ) : (
           records.map((record) => (

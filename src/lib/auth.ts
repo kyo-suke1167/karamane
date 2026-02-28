@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import GoogleProvider from "next-auth/providers/google"; 
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
@@ -10,6 +11,15 @@ export const authOptions: NextAuthOptions = {
     strategy: "jwt",
   },
   providers: [
+    //  Googleログインの設定
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      // 既にID/PWで登録済みのメアドと同じGoogleアカウントでログインした場合、
+      // エラー弾きせずに、自動でアカウントをリンクさせる
+      allowDangerousEmailAccountLinking: true, 
+    }),
+
     CredentialsProvider({
       name: "Email",
       credentials: {

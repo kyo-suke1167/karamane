@@ -15,11 +15,17 @@ export default async function ProfileSettingsPage() {
   // 2. 最新のユーザー情報を取得
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
+    include: { accounts: true },
   });
 
   if (!user) {
     return <div className="text-center mt-10 text-foreground">ユーザーが見つかりません...</div>;
   }
+
+  // Googleアカウントが連携済みかどうか判定
+  const isLinkedWithGoogle = user.accounts.some(
+    (acc) => acc.provider === "google"
+  );
 
   return (
     <div className="max-w-2xl mx-auto py-10 px-4">
@@ -29,8 +35,7 @@ export default async function ProfileSettingsPage() {
       <p className="text-muted-foreground mb-8">
         プロフィールや音域を変更できます
       </p>
-
-      <ProfileForm user={user} />
+      <ProfileForm user={user} isLinkedWithGoogle={isLinkedWithGoogle} />
     </div>
   );
 }

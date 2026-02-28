@@ -36,11 +36,13 @@ model User {
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
-  // リレーション (繋がり)
+  // リレーション
   songs         Song[]
   setlists      Setlist[] // セットリストへのリンク
-
   singingRecords SingingRecord[]
+
+  // Google等の外部アカウント紐付け用
+  accounts      Account[]
 
   @@map("users")
 }
@@ -147,4 +149,28 @@ model SingingRecord {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("singing_records")
+}
+
+// ==========================================
+//  外部アカウント連携用 (NextAuth)
+// ==========================================
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String  @map("user_id")
+  type               String
+  provider           String
+  providerAccountId  String  @map("provider_account_id")
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 同じプロバイダー（Googleなど）で同じアカウントIDの重複を防ぐ
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
 }
