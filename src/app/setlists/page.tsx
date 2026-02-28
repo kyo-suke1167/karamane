@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SetlistList } from "@/components/SetlistList"; 
+import { SetlistList } from "@/components/setlist/SetlistList"; 
 import { redirect } from "next/navigation";
 
 export default async function SetlistsPage() {

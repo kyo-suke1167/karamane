@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { getNoteName, getNoteColor } from "@/lib/noteUtils";
 import { getStatusStyle } from "@/lib/statusUtils";
-import { HomeFilters } from "./HomeFilters";
+import { HomeFilters } from "./SongFilters";
 import { SongStatus } from "@/generated/prisma";
 
 type SongWithUser = {

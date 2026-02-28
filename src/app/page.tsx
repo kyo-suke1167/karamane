@@ -2,8 +2,8 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { ClientSongList } from "@/components/ClientSongList";
-import VocalRangePrompt from "@/components/VocalRangePrompt";
+import { ClientSongList } from "@/components/song/SongList";
+import VocalRangePrompt from "@/components/profile/VocalRangePrompt";
 
 export default async function Home() {
   const session = await getServerSession(authOptions);

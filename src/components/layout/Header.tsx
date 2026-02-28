@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { BulkDeleteModal } from "./BulkDeleteModal";
+import { BulkDeleteModal } from "../song/BulkDeleteModal";
 
 type Props = {
   currentUser?: {

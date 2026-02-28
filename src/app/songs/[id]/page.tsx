@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import KeyController from "@/components/vocal-range/KeyController";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import SingingRecordSection from "@/components/SingingRecordSection";
+import SingingRecordSection from "@/components/song/SingingRecord";
 
 type Props = {
   params: Promise<{ id: string }>;

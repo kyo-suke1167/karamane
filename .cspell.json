@@ -1,0 +1,29 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "words": [
+    "setlist",
+    "setlists",
+    "karamane",
+    "neondb",
+    "cuid",
+    "autoincrement",
+    "pitchfinder",
+    "nextauth",
+    "hookform",
+    "bcryptjs",
+    "lucide",
+    "clsx",
+    "tailwind",
+    "prisma",
+    "youtu",
+    "AMDF",
+    "Vaundy",
+    "hihi"
+  ],
+  "ignorePaths": [
+    "node_modules",
+    ".next",
+    "src/generated"
+  ]
+}

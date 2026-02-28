@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { YoutubeImportClient } from "@/components/YoutubeImportClient";
+import { YoutubeImportClient } from "@/components/song/YoutubeImport";
 
 export default async function YoutubeImportPage() {
   const session = await getServerSession(authOptions);

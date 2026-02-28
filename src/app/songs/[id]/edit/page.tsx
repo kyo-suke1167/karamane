@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import EditSongForm from "@/components/EditSongForm";
+import EditSongForm from "@/components/song/SongForm";
 import { notFound } from "next/navigation";
 
 type Props = {
