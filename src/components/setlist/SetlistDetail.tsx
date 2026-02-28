@@ -1,95 +1,30 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from "@dnd-kit/core";
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-
-import { 
-  addSongsToSetlist, 
-  removeSongsFromSetlist,
-  reorderSetlist,
-} from "@/actions/setlist";
+import { DndContext, closestCenter } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 import { SortableItem } from "./SortableItem";
 import { AddSongModal } from "./AddSongModal";
+import { useSetlistDetail } from "@/hooks/useSetlistDetail";
 
-import { SetlistWithRelations, Song } from "@/types";
+import type { SetlistWithRelations, Song } from "@/types";
 
 export function SetlistDetail({ setlist, allSongs }: { setlist: SetlistWithRelations; allSongs: Song[] }) {
-  const router = useRouter();
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [items, setItems] = useState(setlist.entries); 
-  const [isPending, startTransition] = useTransition();
-
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  );
-
-  const toggleEditMode = () => {
-    setIsEditMode(!isEditMode);
-    setSelectedIds([]);
-  };
-
-  const handleToggleSelect = (id: number) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
-    );
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (over && active.id !== over.id) {
-      const oldIndex = items.findIndex((i) => i.id === active.id);
-      const newIndex = items.findIndex((i) => i.id === over.id);
-      const newItems = arrayMove(items, oldIndex, newIndex);
-      setItems(newItems);
-      const updates = newItems.map((item, index) => ({
-        id: item.id,
-        order: index,
-      }));
-      startTransition(async () => {
-         await reorderSetlist(updates);
-      });
-    }
-  };
-
-  const handleBulkDelete = () => {
-    if (selectedIds.length === 0) return;
-    setItems(items.filter(item => !selectedIds.includes(item.id)));
-    startTransition(async () => {
-      await removeSongsFromSetlist(selectedIds);
-      setSelectedIds([]);
-      router.refresh();
-    });
-  };
-
-  const handleBulkAddSongs = (selectedSongIds: number[]) => {
-    if (selectedSongIds.length === 0) return;
-    startTransition(async () => {
-      await addSongsToSetlist(setlist.id, selectedSongIds);
-      setIsAddModalOpen(false);
-      router.refresh();
-    });
-  };
+  const {
+    items,
+    isEditMode,
+    selectedIds,
+    isAddModalOpen,
+    setIsAddModalOpen,
+    isPending,
+    sensors,
+    toggleEditMode,
+    handleToggleSelect,
+    handleDragEnd,
+    handleBulkDelete,
+    handleBulkAddSongs,
+    handleBack,
+  } = useSetlistDetail(setlist);
 
   return (
     <div className="pb-20">
@@ -126,7 +61,7 @@ export function SetlistDetail({ setlist, allSongs }: { setlist: SetlistWithRelat
                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 013.878.512.75.75 0 11-.256 1.478l-.209-.035-1.005 13.07a3 3 0 01-2.991 2.77H8.084a3 3 0 01-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 01-.256-1.478A48.567 48.567 0 017.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.951a52.662 52.662 0 013.369 0c1.603.051 2.815 1.387 2.815 2.951zm-6.136-1.452a51.196 51.196 0 013.273 0C14.39 3.05 15 3.684 15 4.478v.113a49.488 49.488 0 00-6 0v-.113c0-.794.609-1.428 1.364-1.452zm-.355 5.945a.75.75 0 10-1.5.058l.347 9a.75.75 0 101.499-.058l-.346-9zm5.48.058a.75.75 0 10-1.498-.058l-.347 9a.75.75 0 001.5.058l.345-9z" clipRule="evenodd" /></svg>
                </button>
              ) : (
-               <button onClick={() => router.push("/setlists")} className="p-2 -mr-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors block">
+               <button onClick={handleBack} className="p-2 -mr-2 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors block">
                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-8 h-8"><path fillRule="evenodd" d="M5.47 5.47a.75.75 0 011.06 0L12 10.94l5.47-5.47a.75.75 0 111.06 1.06L13.06 12l5.47 5.47a.75.75 0 11-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 01-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 010-1.06z" clipRule="evenodd" /></svg>
                </button>
              )}

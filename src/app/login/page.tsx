@@ -92,9 +92,6 @@ function LoginContent() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <p className="text-[11px] font-bold text-muted-foreground mt-1.5 text-right">
-              💡 PWを忘れた場合は、同じメアドの<br className="sm:hidden" />Googleアカウントでログインすると復旧できます
-            </p>
           </div>
 
           <button

@@ -403,3 +403,35 @@ main ブランチへマージ完了。
 - **本番環境へのデプロイと動作確認**
   - GCPにてOAuthクライアントID・シークレットを発行。
   - Vercelの環境変数にキーを登録し、GCP側に本番用のリダイレクトURIを設定。本番環境でのGoogleログイン成功を確認。
+
+  ## 🛠️ [2024-02-xx] アーキテクチャの抜本的リファクタリング（プロ仕様への進化）
+
+アプリの機能が完成したため、保守性と可読性を極限まで高める「大掃除」を実施した。
+
+### 1. ディレクトリ構造の最適化
+- `src/components/` 直下に散らばっていたファイルを、ドメイン（役割）ごとにフォルダ分け。
+  - `layout/` (Header, Footer, Providers)
+  - `song/` (SongList, SongForm, YoutubeImport 等)
+  - `setlist/` (SetlistList, SetlistDetail 等)
+  - `profile/` (ProfileForm 等)
+  - `ui/` (汎用パーツ)
+- 各コンポーネント名から `Client` や `Section` などの冗長な接尾辞を削除。
+
+### 2. バックエンド（Server Actions）のドメイン分割
+- 500行を超えていた単一の `actions.ts` を廃止。
+- `src/actions/` ディレクトリを新設し、`user.ts`, `song.ts`, `setlist.ts`, `youtube.ts`, `record.ts` に分割。責務を完全に分離した。
+
+### 3. 型定義の集約
+- 各ファイルに散らばっていた Prisma の拡張型（`SetlistWithRelations` 等）や、フロントエンド用の型（`PreviewSong` 等）を `src/types/index.ts` に集約。
+
+### 4. Custom Hooks によるロジックとUIの完全分離（最重要）
+長大化していたコンポーネントから、状態管理や複雑な計算ロジック（ビジネスロジック）を抽出。
+- `usePitchMeasurement.ts`: ブラウザのマイクAPI（AudioContext）や周波数解析（pitchfinder）のロジックを分離。
+- `useYoutubeImport.ts`: YouTube API通信、重複チェック、保存用の一括データ整形ロジックを分離。
+- `useSongList.ts`: 楽曲の検索フィルター、ソート、ページネーション計算を分離。
+- `useSetlistDetail.ts`: `dnd-kit` を用いたドラッグ＆ドロップ計算、一括操作ロジックを分離。
+これにより、コンポーネント側は「純粋なUIの描画」のみに集中するクリーンな設計を実現。
+
+### 5. 開発環境の整備
+- `.cspell.json` を導入し、プロジェクト固有の単語（setlist, karamane 等）を辞書登録。スペル警告をゼロに。
+- `.vscode/settings.json` を追加し、Tailwind CSS の最新 `@` ルールに対する不要な警告を抑制。
