@@ -15,6 +15,14 @@ const passwordRule = z
   .min(8, "パスワードは8文字以上で入力してください")
   .regex(/^[\x20-\x7e]+$/, "半角英数字・記号で入力してください");
 
+const noteIdSchema = z.preprocess((val) => {
+  if (val === "" || val === null || val === undefined || val === "null") return null;
+  const parsed = Number(val);
+  // 数字ではない場合や 0 の場合は null にする
+  if (Number.isNaN(parsed) || parsed === 0) return null;
+  return parsed;
+}, z.number().nullable().optional());
+
 // ==========================================
 // 新規登録 (Sign Up)
 // ==========================================
@@ -44,11 +52,10 @@ export const songSchema = z.object({
   artist: z.string().min(1, "アーティスト名は必須です").max(100),
   youtubeUrl: z.string().url("URLの形式が正しくありません").or(z.literal("")).optional(),
   status: z.enum(["PRACTICING", "LEARNED", "MASTERED"]),
-  minNoteId: z.number().nullable().optional(),
-  maxNoteId: z.number().nullable().optional(),
+  minNoteId: noteIdSchema,
+  maxNoteId: noteIdSchema,
   memo: z.string().max(500).optional(),
 }).refine((data) => {
-  // 両方設定されている場合のみ大小をチェック
   if (data.minNoteId != null && data.maxNoteId != null) {
     return data.minNoteId <= data.maxNoteId;
   }
@@ -65,8 +72,8 @@ export type SongSchema = z.infer<typeof songSchema>;
 // ==========================================
 export const profileSchema = z.object({
   name: z.string().min(1, "名前を入力してください").max(50),
-  minNoteId: z.number().nullable().optional(),
-  maxNoteId: z.number().nullable().optional(),
+  minNoteId: noteIdSchema,
+  maxNoteId: noteIdSchema,
 }).refine((data) => {
   if (data.minNoteId != null && data.maxNoteId != null) {
     return data.minNoteId <= data.maxNoteId;
