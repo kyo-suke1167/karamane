@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Karamane (カラマネ)
 
-## Getting Started
+> 自分の「歌える」を視覚化する、新感覚カラオケ管理アプリ
 
-First, run the development server:
+## プロダクトの概要
+
+「あの曲、最高音が高すぎて歌えなかった…」「どのキーなら気持ちよく歌えるかわからない…」
+Karamane（カラマネ）は、そんなカラオケ好きの悩みを解決するために生まれたWebアプリケーションです。
+
+単なる曲のメモ帳ではなく、自分の音域と曲の音域を比較し、最適なキーを提案。さらに、YouTubeのプレイリストからの一括抽出や、ドラッグ＆ドロップでのセットリスト作成など、歌う前の準備を極限までスムーズにする機能を搭載しています。
+
+## ターゲットユーザーと解決する課題
+
+- 課題: 自分の限界音域がわからない。どのキーに設定すれば気持ちよく歌えるか毎回迷う。
+- 解決: ブラウザ上でのマイク音域測定と、楽曲ごとの「最適キー提案」機能により、無理なく歌える選曲をサポートします。
+
+---
+
+## コア機能 (Features)
+
+### 1. ブラウザで完結する「音域測定」と「キー提案」
+- pitchfinder と Web Audio API を活用し、スマホやPCのマイクからユーザーの最低音・最高音（Hz）をリアルタイムに解析。
+- 曲の音域データと照らし合わせ、「原曲キーで歌えるか」「オク下・オク上が適切か」をAIライクに自動提案。
+
+### 2. YouTubeプレイリストからの「解析・一括インポート」
+- 公開/限定公開のプレイリストURLを入力するだけで、最大50曲の「曲名・アーティスト名」を自動クレンジングして一括抽出。
+- 登録済みの曲は重複チェックで自動スキップされる安心設計。
+
+### 3. dnd-kit を駆使した直感的なセットリスト作成
+- 「友人用」「ヒトカラ用」など、シーンに合わせたセットリストを作成可能。
+- ドラッグ＆ドロップによるスムーズな並び替えや、インクリメンタルサーチによる楽曲の一括追加に対応。
+
+### 4. モチベーションを高める「カラオケ日記＆点数グラフ」
+- 歌唱時の点数やキー設定、振り返りメモを記録。
+- recharts を用いた折れ線グラフで点数の推移を視覚化し、成長を実感できるUXを提供。
+
+---
+
+## 技術スタック (Tech Stack)
+
+モダンなフロントエンド技術と、堅牢なバックエンド設計を組み合わせて開発しています。
+
+- Framework: Next.js 15 (App Router)
+- Language: TypeScript
+- Styling: Tailwind CSS v4
+- Database: PostgreSQL (Neon)
+- ORM: Prisma v7
+- Authentication: NextAuth.js (Google OAuth / Credentials)
+- UI/UX Libraries: dnd-kit (ドラッグ＆ドロップ), recharts (グラフ), react-hook-form + zod (バリデーション)
+- Audio Processing: pitchfinder
+
+### アーキテクチャのこだわり（クリーン設計）
+コンポーネントの長大化を防ぐため、「純粋なUIの描画」と「複雑なビジネスロジック」を Custom Hooks により完全分離しています。
+- 例: useYoutubeImport (通信とデータ成形), useSongList (クライアントサイドの検索・ソート), useSetlistDetail (dnd-kitの制御) など。
+これにより、保守性が高く、チーム開発にも耐えうる実務レベルのコードベースを実現しました。
+
+---
+
+## 今後の展望
+
+現在は個人向けのカラオケ管理アプリとして機能していますが、今後は「VTuber・配信者のための歌枠インフラ」を目指して進化を続けます。配信者の「歌える曲リスト」管理の煩雑さを解消し、リスナーとのコミュニケーションを活性化する機能を予定しています。
+
+1. リスナー向け「リクエスト・ポータル（公開共有用ページ）」
+   - ログイン不要で誰でも閲覧できる、配信者専用の「歌える曲リスト」URL発行機能。
+   - インクリメンタルサーチと、配信のコメント欄へ直接貼り付けられる「リクエストコピペボタン」の実装。
+   - JOYSOUNDやDAMなどの配信音源の有無をバッジで可視化。
+
+2. マスターデータからの自動サジェスト機能
+   - カラオケ定番1000曲以上の「曲名・アーティスト・音域」の初期データベース化。入力の手間をゼロに。
+
+3. 公式マスコットキャラクターの導入
+   - 無機質なツールからの脱却。キャラクターが音域測定やキー設定を「話し言葉」でナビゲートし、アプリに愛着を生むエンタメUIの構築。
+
+4. 配信画面用 OBS ウィジェット
+   - 「Now Singing（現在歌唱中の曲・キー）」を配信画面にリアルタイム表示できる透過URLの提供。
+
+---
+
+## ローカル環境での動かし方
 
 ```bash
+# 1. リポジトリのクローン
+git clone [https://github.com/kyo-suke1167/karamane.git](https://github.com/kyo-suke1167/karamane.git)
+cd karamane
+
+# 2. パッケージのインストール
+npm install
+
+# 3. 環境変数の設定
+# .env ファイルを作成し、DATABASE_URL や NEXTAUTH_SECRET 等を設定してください。
+
+# 4. データベースのセットアップ (Prisma)
+npx prisma generate
+npx prisma db push
+
+# 5. 開発サーバーの起動
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
