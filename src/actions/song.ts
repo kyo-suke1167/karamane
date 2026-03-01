@@ -20,8 +20,16 @@ export async function createSong(data: SongSchema) {
 }
 
 export async function updateSong(formData: FormData) {
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
   const id = Number(formData.get("id"));
   if (!id || isNaN(id)) throw new Error("IDが存在しません");
+
+  const existingSong = await prisma.song.findUnique({ where: { id } });
+  if (!existingSong || existingSong.userId !== session.user.id) {
+    throw new Error("更新する権限がありません");
+  }
 
   const rawMinNoteId = formData.get("minNoteId");
   const rawMaxNoteId = formData.get("maxNoteId");
@@ -47,14 +55,34 @@ export async function updateSong(formData: FormData) {
 }
 
 export async function updateSongKey(songId: number, newKey: number) {
-  await prisma.song.update({
-    where: { id: songId },
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  const result = await prisma.song.updateMany({
+    where: { id: songId, userId: session.user.id },
     data: { key: newKey },
   });
+
+  if (result.count === 0) {
+    throw new Error("曲が見つからないか、更新する権限がありません");
+  }
 }
 
 export async function deleteSong(songId: number) {
-  await prisma.song.delete({ where: { id: songId } });
+  const session = await getServerSession(authOptions);
+  if (!session || !session.user) throw new Error("ログインしてください");
+
+  const result = await prisma.song.deleteMany({
+    where: {
+      id: songId,
+      userId: session.user.id,
+    },
+  });
+
+  if (result.count === 0) {
+    throw new Error("曲が見つからないか、削除する権限がありません");
+  }
+
   redirect("/");
 }
 

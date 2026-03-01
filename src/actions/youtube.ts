@@ -61,16 +61,29 @@ export async function fetchYoutubePlaylist(url: string) {
 
     const playlistTitle = playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
 
-    const itemsRes = await fetch(
-      `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}`,
-      { cache: "no-store" },
-    );
-    const itemsData = await itemsRes.json();
+    let allItems: YoutubePlaylistItem[] = [];
+    let nextPageToken = "";
+    const maxPages = 20;
+    let pageCount = 0;
 
-    if (!itemsData.items)
-      return { error: "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。" };
+    do {
+      const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ""}`;
+      
+      const itemsRes = await fetch(apiUrl, { cache: "no-store" });
+      const itemsData = await itemsRes.json();
 
-    const songs = itemsData.items
+      if (!itemsData.items) {
+        if (pageCount === 0) return { error: "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。" };
+        break; // 2ページ目以降でカラの場合はループ終了
+      }
+
+      allItems = [...allItems, ...itemsData.items];
+      nextPageToken = itemsData.nextPageToken;
+      pageCount++;
+
+    } while (nextPageToken && pageCount < maxPages);
+
+    const songs = allItems
       .map((item: YoutubePlaylistItem) => {
         const rawTitle = item.snippet.title;
         if (rawTitle === "Private video" || rawTitle === "Deleted video") return null;
@@ -126,7 +139,7 @@ export async function fetchYoutubePlaylist(url: string) {
           isDuplicate,
         };
       })
-      .filter(Boolean);
+      .filter((song): song is NonNullable<typeof song> => song !== null);
 
     return { playlistTitle, songs };
   } catch (error: unknown) {

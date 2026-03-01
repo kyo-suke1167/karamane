@@ -87,21 +87,27 @@ export function useYoutubeImport() {
     }
 
     startTransition(async () => {
-      const dataToSave = selectedSongs.map(
-        ({ title, artist, youtubeUrl, status, key, memo }) => ({
-          title,
-          artist,
-          youtubeUrl,
-          status,
-          key,
-          memo,
-        })
-      );
+      // 🌟 エラーハンドリング追加：万が一の通信エラーでもフリーズさせない！
+      try {
+        const dataToSave = selectedSongs.map(
+          ({ title, artist, youtubeUrl, status, key, memo }) => ({
+            title,
+            artist,
+            youtubeUrl,
+            status,
+            key,
+            memo,
+          })
+        );
 
-      await saveImportedSongs(
-        dataToSave,
-        createSetlist ? setlistName : undefined
-      );
+        await saveImportedSongs(
+          dataToSave,
+          createSetlist ? setlistName : undefined
+        );
+      } catch (err: unknown) {
+        console.error("保存エラー:", err);
+        alert("保存に失敗しました。通信環境を確認して、もう一度お試しください！");
+      }
     });
   };
 
