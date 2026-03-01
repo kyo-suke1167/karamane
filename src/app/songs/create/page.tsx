@@ -76,7 +76,7 @@ export default function CreateSongPage() {
   };
 
   return (
-    <div className="max-w-2xl mx-auto py-10 px-4">
+    <div className="max-w-2xl mx-auto pb-20 px-4">
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
         <h1 className="text-2xl font-bold flex items-center gap-2 text-foreground">新しい持ち歌を登録</h1>
         <Link 

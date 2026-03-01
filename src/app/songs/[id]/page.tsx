@@ -54,7 +54,7 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
   const videoId = getYouTubeId(song.youtubeUrl);
 
   return (
-    <div className="max-w-2xl mx-auto pb-20">
+    <div className="max-w-2xl mx-auto pb-20 ">
       {/* 戻るボタン */}
       <Link
         href={backUrl}
