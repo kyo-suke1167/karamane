@@ -221,7 +221,10 @@ export default function CreateSongPage() {
         {/* メモ */}
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">メモ</label>
-          <textarea {...register("memo")} rows={4} 
+          <textarea 
+            {...register("memo")} 
+            rows={4} 
+            placeholder="例: Cメロの息継ぎ注意！ / オク下で歌うとちょうどいい / 〇〇さんの歌い方を参考に練習中、など"
             className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none resize-none transition-colors placeholder:text-muted-foreground" 
           />
         </div>
