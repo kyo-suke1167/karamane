@@ -15,15 +15,12 @@ const passwordRule = z
   .min(8, "パスワードは8文字以上で入力してください")
   .regex(/^[\x20-\x7e]+$/, "半角英数字・記号で入力してください");
 
-const noteIdSchema = z
-  .union([z.string(), z.number()])
-  .nullish()
-  .transform((val) => {
-    if (val === "" || val === null || val === undefined || val === "null") return null;
-    const parsed = Number(val);
-    if (Number.isNaN(parsed) || parsed === 0) return null;
-    return parsed;
-  });
+const noteIdSchema = z.preprocess((val) => {
+  if (val === "" || val === null || val === undefined || val === "null") return null;
+  const parsed = Number(val);
+  if (Number.isNaN(parsed) || parsed === 0) return null;
+  return parsed;
+}, z.number().nullable().optional()) as unknown as z.ZodType<number | null | undefined, any, any>;
 
 // ==========================================
 // 新規登録 (Sign Up)
