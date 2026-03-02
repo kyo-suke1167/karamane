@@ -29,7 +29,7 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
-    })
+    }),
   );
 
   const toggleEditMode = () => {
@@ -39,7 +39,7 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
 
   const handleToggleSelect = (id: number) => {
     setSelectedIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id],
     );
   };
 
@@ -50,12 +50,12 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
       const newIndex = items.findIndex((i) => i.id === over.id);
       const newItems = arrayMove(items, oldIndex, newIndex);
       setItems(newItems);
-      
+
       const updates = newItems.map((item, index) => ({
         id: item.id,
         order: index,
       }));
-      
+
       startTransition(async () => {
         await reorderSetlist(updates);
       });

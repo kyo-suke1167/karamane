@@ -19,9 +19,9 @@ export default async function SetlistDetailPage({
   if (isNaN(setlistId)) notFound();
 
   const setlist = await prisma.setlist.findUnique({
-    where: { 
+    where: {
       id: setlistId,
-      userId, 
+      userId,
     },
     include: {
       entries: {
@@ -44,10 +44,6 @@ export default async function SetlistDetailPage({
   const uniqueKey = setlist.entries.map((e) => e.id).join("-");
 
   return (
-    <SetlistDetail 
-      key={uniqueKey} 
-      setlist={setlist} 
-      allSongs={allSongs} 
-    />
+    <SetlistDetail key={uniqueKey} setlist={setlist} allSongs={allSongs} />
   );
 }

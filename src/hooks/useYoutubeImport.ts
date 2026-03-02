@@ -34,13 +34,15 @@ export function useYoutubeImport() {
               ...s,
               id: `temp-${i}`,
               status: "LEARNED" as SongStatus,
-            })
+            }),
           ) as PreviewSong[];
 
           setSongs(previewData);
           setListName(data.playlistTitle || "");
 
-          const dupes = previewData.filter((s: PreviewSong) => s.isDuplicate).length;
+          const dupes = previewData.filter(
+            (s: PreviewSong) => s.isDuplicate,
+          ).length;
           if (dupes > 0) {
             setDuplicateCount(dupes);
             setShowDuplicateModal(true);
@@ -63,19 +65,19 @@ export function useYoutubeImport() {
           return { ...song, title: song.artist, artist: song.title };
         }
         return song;
-      })
+      }),
     );
   };
 
   const updateSong = <K extends keyof PreviewSong>(
     id: string,
     field: K,
-    value: PreviewSong[K]
+    value: PreviewSong[K],
   ) => {
     setSongs(
       songs.map((song) =>
-        song.id === id ? { ...song, [field]: value } : song
-      )
+        song.id === id ? { ...song, [field]: value } : song,
+      ),
     );
   };
 
@@ -96,16 +98,18 @@ export function useYoutubeImport() {
             status,
             key,
             memo,
-          })
+          }),
         );
 
         await saveImportedSongs(
           dataToSave,
-          createSetlist ? setlistName : undefined
+          createSetlist ? setlistName : undefined,
         );
       } catch (err: unknown) {
         console.error("保存エラー:", err);
-        alert("保存に失敗しました。通信環境を確認して、もう一度お試しください！");
+        alert(
+          "保存に失敗しました。通信環境を確認して、もう一度お試しください！",
+        );
       }
     });
   };

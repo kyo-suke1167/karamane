@@ -8,8 +8,8 @@ export type { Song, Setlist, SetlistEntry };
 // ==========================================
 
 // セットリスト詳細用: SetlistEntry に Song が紐づいた型
-export type SetlistEntryWithSong = SetlistEntry & { 
-  song: Song 
+export type SetlistEntryWithSong = SetlistEntry & {
+  song: Song;
 };
 
 // セットリスト詳細用: Setlist に Entry(とSong) が紐づいた型
@@ -25,7 +25,6 @@ export type SetlistWithCount = Setlist & {
 // ==========================================
 // 2. UI・フロントエンド用コンポーネント型
 // ==========================================
-
 
 // 曲リストの並び替え（ソート）用の型
 

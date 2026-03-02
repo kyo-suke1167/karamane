@@ -49,9 +49,13 @@ export function useSongList(initialSongs: SongWithUser[]) {
         case "artist-asc":
           return a.artist.localeCompare(b.artist, "ja");
         case "createdAt-desc":
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
         case "createdAt-asc":
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return (
+            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          );
         default:
           return 0;
       }

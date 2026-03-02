@@ -17,7 +17,7 @@ export type PitchData = {
 
 export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
   const [isListening, setIsListening] = useState(false);
-  
+
   const [lowestNote, setLowestNote] = useState<number | null>(null);
   const [highestNote, setHighestNote] = useState<number | null>(null);
 
@@ -25,7 +25,9 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const requestRef = useRef<number | null>(null);
-  const detectPitchRef = useRef<((float32Array: Float32Array) => number | null) | null>(null);
+  const detectPitchRef = useRef<
+    ((float32Array: Float32Array) => number | null) | null
+  >(null);
 
   const sustainedNoteRef = useRef<number | null>(null);
   const sustainCountRef = useRef<number>(0);
@@ -62,8 +64,16 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
           if (currentNoteNum === sustainedNoteRef.current) {
             sustainCountRef.current += 1;
             if (sustainCountRef.current >= MIN_SUSTAIN_FRAMES) {
-              setLowestNote((prev) => (prev === null || currentNoteNum! < prev) ? currentNoteNum! : prev);
-              setHighestNote((prev) => (prev === null || currentNoteNum! > prev) ? currentNoteNum! : prev);
+              setLowestNote((prev) =>
+                prev === null || currentNoteNum! < prev
+                  ? currentNoteNum!
+                  : prev,
+              );
+              setHighestNote((prev) =>
+                prev === null || currentNoteNum! > prev
+                  ? currentNoteNum!
+                  : prev,
+              );
             }
           } else {
             sustainedNoteRef.current = currentNoteNum;
@@ -80,7 +90,11 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
     }
 
     if (onUpdateRef.current) {
-      onUpdateRef.current({ volume: newVolume, pitch: currentPitch, noteNum: currentNoteNum });
+      onUpdateRef.current({
+        volume: newVolume,
+        pitch: currentPitch,
+        noteNum: currentNoteNum,
+      });
     }
 
     requestRef.current = requestAnimationFrame(loop);
@@ -91,7 +105,11 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
 
-      const audioCtx = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const audioCtx = new (
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext })
+          .webkitAudioContext
+      )();
       audioContextRef.current = audioCtx;
 
       const analyser = audioCtx.createAnalyser();
@@ -116,7 +134,8 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
 
   const stopListening = useCallback(() => {
     if (requestRef.current) cancelAnimationFrame(requestRef.current);
-    if (streamRef.current) streamRef.current.getTracks().forEach((track) => track.stop());
+    if (streamRef.current)
+      streamRef.current.getTracks().forEach((track) => track.stop());
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
       audioContextRef.current.close();
     }
@@ -124,7 +143,7 @@ export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
     setIsListening(false);
     sustainedNoteRef.current = null;
     sustainCountRef.current = 0;
-    
+
     if (onUpdateRef.current) {
       onUpdateRef.current({ volume: 0, pitch: null, noteNum: null });
     }

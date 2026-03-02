@@ -30,11 +30,11 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
 
   const song = await prisma.song.findUnique({
     where: { id: songId },
-    include: { 
+    include: {
       user: true,
       singingRecords: {
-        orderBy: { createdAt: "desc" }
-      }
+        orderBy: { createdAt: "desc" },
+      },
     },
   });
 
@@ -173,7 +173,10 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
           )}
 
           {/* カラオケ日記セクション */}
-          <SingingRecordSection songId={song.id} records={song.singingRecords} />
+          <SingingRecordSection
+            songId={song.id}
+            records={song.singingRecords}
+          />
 
           {/* メタ情報 */}
           <div className="border-t border-border-light pt-6 flex flex-col gap-2 text-sm text-muted-foreground">

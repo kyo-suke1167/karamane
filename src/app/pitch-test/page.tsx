@@ -5,7 +5,10 @@ import { getNoteName as getKaraokeNoteName } from "@/lib/noteUtils";
 import { saveVocalRange } from "@/actions/user";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { usePitchMeasurement, type PitchData } from "@/hooks/usePitchMeasurement";
+import {
+  usePitchMeasurement,
+  type PitchData,
+} from "@/hooks/usePitchMeasurement";
 
 const MIN_VOLUME = 20;
 
@@ -34,7 +37,8 @@ export default function PitchTestPage() {
     }
 
     if (hzDisplayRef.current) {
-      hzDisplayRef.current.innerText = data.pitch && valid ? `${data.pitch} Hz` : "--- Hz";
+      hzDisplayRef.current.innerText =
+        data.pitch && valid ? `${data.pitch} Hz` : "--- Hz";
     }
 
     if (volumeBarRef.current) {
@@ -90,11 +94,11 @@ export default function PitchTestPage() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           🎙️ 音域測定
         </h1>
-        <Link 
-          href="/settings/profile" 
+        <Link
+          href="/settings/profile"
           className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors bg-muted hover:bg-border px-3 py-1.5 rounded-lg flex items-center gap-1"
         >
-          <span>ユーザー設定に移動</span> 
+          <span>ユーザー設定に移動</span>
         </Link>
       </div>
 
@@ -103,37 +107,53 @@ export default function PitchTestPage() {
           💡 測定のコツ
         </p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          無理な声出しは禁物！あなたが<strong className="text-primary">「楽に出せる声の範囲」</strong>を測定してみてね。
-          雑音や一瞬の裏返りを拾わないよう、<strong className="text-red-400">赤い線</strong>を超える声量で「アー」と少しキープして歌ってね！
+          無理な声出しは禁物！あなたが
+          <strong className="text-primary">「楽に出せる声の範囲」</strong>
+          を測定してみてね。 雑音や一瞬の裏返りを拾わないよう、
+          <strong className="text-red-400">赤い線</strong>
+          を超える声量で「アー」と少しキープして歌ってね！
         </p>
       </div>
 
       <div className="bg-card border border-border p-6 rounded-xl shadow-sm space-y-6 transition-colors">
-        
         <div className="flex justify-between items-center">
-          <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-xs transition-colors border
+          <div
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-xs transition-colors border
             ${isListening ? "bg-primary/10 text-primary border-primary/30" : "bg-muted text-muted-foreground border-border"}`}
           >
-            <div className={`w-2 h-2 rounded-full ${isListening ? "bg-primary animate-pulse" : "bg-muted-foreground"}`} />
+            <div
+              className={`w-2 h-2 rounded-full ${isListening ? "bg-primary animate-pulse" : "bg-muted-foreground"}`}
+            />
             {isListening ? "測定中..." : "待機中"}
           </div>
         </div>
 
         <div className="text-center py-6 bg-background rounded-xl border border-border relative overflow-hidden">
-          <p className="text-sm font-bold text-muted-foreground mb-1 relative z-10">現在の音</p>
-          
-          <div ref={noteDisplayRef} className="text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors text-muted-foreground/30">
+          <p className="text-sm font-bold text-muted-foreground mb-1 relative z-10">
+            現在の音
+          </p>
+
+          <div
+            ref={noteDisplayRef}
+            className="text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors text-muted-foreground/30"
+          >
             -
           </div>
-          
-          <p ref={hzDisplayRef} className="text-xs text-muted-foreground font-mono relative z-10">
+
+          <p
+            ref={hzDisplayRef}
+            className="text-xs text-muted-foreground font-mono relative z-10"
+          >
             --- Hz
           </p>
-          
+
           <div className="absolute bottom-0 left-0 w-full h-2 bg-muted">
-            <div className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10" style={{ left: `${MIN_VOLUME}%` }} />
-            
-            <div 
+            <div
+              className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10"
+              style={{ left: `${MIN_VOLUME}%` }}
+            />
+
+            <div
               ref={volumeBarRef}
               className="h-full transition-all duration-75 ease-out bg-primary/30"
               style={{ width: "0%" }}
@@ -143,13 +163,17 @@ export default function PitchTestPage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-background p-4 rounded-xl text-center border border-border flex flex-col justify-center">
-            <p className="text-xs font-bold text-muted-foreground mb-1">最低音 (Low)</p>
+            <p className="text-xs font-bold text-muted-foreground mb-1">
+              最低音 (Low)
+            </p>
             <div className="text-3xl font-black text-blue-500 min-h-9">
               {getDisplayNote(lowestNote)}
             </div>
           </div>
           <div className="bg-background p-4 rounded-xl text-center border border-border flex flex-col justify-center">
-            <p className="text-xs font-bold text-muted-foreground mb-1">最高音 (High)</p>
+            <p className="text-xs font-bold text-muted-foreground mb-1">
+              最高音 (High)
+            </p>
             <div className="text-3xl font-black text-red-400 min-h-9">
               {getDisplayNote(highestNote)}
             </div>
@@ -166,37 +190,47 @@ export default function PitchTestPage() {
 
         <div className="flex flex-col gap-3 pt-2">
           {isListening ? (
-            <button onClick={stopListening} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30 font-bold py-3 rounded-xl transition-colors w-full">
+            <button
+              onClick={stopListening}
+              className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30 font-bold py-3 rounded-xl transition-colors w-full"
+            >
               測定をストップ
             </button>
           ) : (
             <div className="flex gap-2 w-full">
-              <button onClick={resetRecords} className="bg-muted hover:bg-border text-foreground font-bold py-3 px-4 rounded-xl transition-colors shrink-0">
+              <button
+                onClick={resetRecords}
+                className="bg-muted hover:bg-border text-foreground font-bold py-3 px-4 rounded-xl transition-colors shrink-0"
+              >
                 リセット
               </button>
-              
-              <button 
-                onClick={startListening} 
+
+              <button
+                onClick={startListening}
                 className={`flex-1 font-bold py-3 rounded-xl shadow-md transition-colors ${
-                  (lowestNote !== null || highestNote !== null)
+                  lowestNote !== null || highestNote !== null
                     ? "bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30"
                     : "bg-primary text-primary-foreground hover:bg-primary-hover"
                 }`}
               >
-                {(lowestNote !== null || highestNote !== null) ? "測定を再開" : "測定をはじめる"}
+                {lowestNote !== null || highestNote !== null
+                  ? "測定を再開"
+                  : "測定をはじめる"}
               </button>
             </div>
           )}
 
           {lowestNote !== null && highestNote !== null && !isListening && (
             <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-              <button 
+              <button
                 onClick={handleSaveToProfile}
                 disabled={isPending}
                 className={`w-full font-bold py-3 rounded-xl transition-colors shadow-sm
-                  ${isPending 
-                    ? "bg-muted text-muted-foreground cursor-not-allowed" 
-                    : "bg-primary text-primary-foreground hover:bg-primary-hover"}`}
+                  ${
+                    isPending
+                      ? "bg-muted text-muted-foreground cursor-not-allowed"
+                      : "bg-primary text-primary-foreground hover:bg-primary-hover"
+                  }`}
               >
                 {isPending ? "保存中..." : "この音域をプロフィールに保存"}
               </button>

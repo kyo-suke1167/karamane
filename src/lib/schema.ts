@@ -16,11 +16,14 @@ const passwordRule = z
   .regex(/^[\x20-\x7e]+$/, "半角英数字・記号で入力してください");
 
 const noteIdSchema = z.preprocess((val) => {
-  if (val === "" || val === null || val === undefined || val === "null") return null;
+  if (val === "" || val === null || val === undefined || val === "null")
+    return null;
   const parsed = Number(val);
   if (Number.isNaN(parsed) || parsed === 0) return null;
   return parsed;
-}, z.number().nullable().optional()) as unknown as ZodOptional<ZodNullable<ZodNumber>>;
+}, z.number().nullable().optional()) as unknown as ZodOptional<
+  ZodNullable<ZodNumber>
+>;
 
 // ==========================================
 // 新規登録 (Sign Up)
@@ -46,42 +49,56 @@ export type LoginSchema = z.infer<typeof loginSchema>;
 // ==========================================
 // 曲の登録・編集 (Song)
 // ==========================================
-export const songSchema = z.object({
-  title: z.string().min(1, "曲名は必須です").max(100),
-  artist: z.string().min(1, "アーティスト名は必須です").max(100),
-  youtubeUrl: z.string().url("URLの形式が正しくありません").or(z.literal("")).optional(),
-  status: z.enum(["PRACTICING", "LEARNED", "MASTERED"]),
-  minNoteId: noteIdSchema,
-  maxNoteId: noteIdSchema,
-  memo: z.string().max(500).optional(),
-}).refine((data) => {
-  if (data.minNoteId != null && data.maxNoteId != null) {
-    return data.minNoteId <= data.maxNoteId;
-  }
-  return true;
-}, {
-  message: "最低音は最高音より低く設定してください",
-  path: ["minNoteId"],
-});
+export const songSchema = z
+  .object({
+    title: z.string().min(1, "曲名は必須です").max(100),
+    artist: z.string().min(1, "アーティスト名は必須です").max(100),
+    youtubeUrl: z
+      .string()
+      .url("URLの形式が正しくありません")
+      .or(z.literal(""))
+      .optional(),
+    status: z.enum(["PRACTICING", "LEARNED", "MASTERED"]),
+    minNoteId: noteIdSchema,
+    maxNoteId: noteIdSchema,
+    memo: z.string().max(500).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.minNoteId != null && data.maxNoteId != null) {
+        return data.minNoteId <= data.maxNoteId;
+      }
+      return true;
+    },
+    {
+      message: "最低音は最高音より低く設定してください",
+      path: ["minNoteId"],
+    },
+  );
 
 export type SongSchema = z.infer<typeof songSchema>;
 
 // ==========================================
 // プロフィール編集
 // ==========================================
-export const profileSchema = z.object({
-  name: z.string().min(1, "名前を入力してください").max(50),
-  minNoteId: noteIdSchema,
-  maxNoteId: noteIdSchema,
-}).refine((data) => {
-  if (data.minNoteId != null && data.maxNoteId != null) {
-    return data.minNoteId <= data.maxNoteId;
-  }
-  return true;
-}, {
-  message: "最低音は最高音より低く設定してください",
-  path: ["minNoteId"],
-});
+export const profileSchema = z
+  .object({
+    name: z.string().min(1, "名前を入力してください").max(50),
+    minNoteId: noteIdSchema,
+    maxNoteId: noteIdSchema,
+  })
+  .refine(
+    (data) => {
+      if (data.minNoteId != null && data.maxNoteId != null) {
+        return data.minNoteId <= data.maxNoteId;
+      }
+      return true;
+    },
+    {
+      message: "最低音は最高音より低く設定してください",
+      path: ["minNoteId"],
+    },
+  );
 
 // ==========================================
 // セットリスト (Setlist)

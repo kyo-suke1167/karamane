@@ -21,14 +21,13 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-
   const session = await getServerSession(authOptions);
-  
+
   let currentUser = null;
   if (session?.user) {
     currentUser = await prisma.user.findUnique({
       where: { id: (session.user as { id: string }).id },
-      select: { name: true, image: true }
+      select: { name: true, image: true },
     });
   }
 
@@ -36,7 +35,7 @@ export default async function RootLayout({
     <html lang="ja" suppressHydrationWarning>
       <body className={`${inter.className} bg-gray-50 text-gray-800`}>
         <Providers>
-          <Header currentUser={currentUser}/>
+          <Header currentUser={currentUser} />
           <main className="max-w-4xl mx-auto p-4 min-h-[calc(100vh-64px)]">
             {children}
           </main>

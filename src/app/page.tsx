@@ -18,7 +18,9 @@ export default async function Home() {
           KARAMANE
         </h1>
         <p className="text-xl text-muted-foreground mb-8 font-bold leading-relaxed">
-          あなたの「持ち歌」を、<br />もっと賢く管理！
+          あなたの「持ち歌」を、
+          <br />
+          もっと賢く管理！
         </p>
 
         <div className="space-y-4 w-full max-w-xs">
@@ -40,17 +42,23 @@ export default async function Home() {
           <div className="p-5 bg-card rounded-xl shadow-sm border border-border">
             <div className="text-2xl mb-2">🎤</div>
             <div className="font-bold text-foreground mb-1">持ち歌管理</div>
-            レパートリーを<br />ステータス管理
+            レパートリーを
+            <br />
+            ステータス管理
           </div>
           <div className="p-5 bg-card rounded-xl shadow-sm border border-border">
             <div className="text-2xl mb-2">📊</div>
             <div className="font-bold text-foreground mb-1">キー提案</div>
-            音域に合わせた<br />最適キーを表示
+            音域に合わせた
+            <br />
+            最適キーを表示
           </div>
           <div className="p-5 bg-card rounded-xl shadow-sm border border-border">
             <div className="text-2xl mb-2">📱</div>
             <div className="font-bold text-foreground mb-1">スマホ対応</div>
-            カラオケで<br />サッと確認
+            カラオケで
+            <br />
+            サッと確認
           </div>
         </div>
       </div>
@@ -73,15 +81,16 @@ export default async function Home() {
     where: { id: userId },
   });
 
-  const isVocalRangeMissing = user?.minNoteId === null || user?.maxNoteId === null;
+  const isVocalRangeMissing =
+    user?.minNoteId === null || user?.maxNoteId === null;
 
   return (
     <div className="max-w-4xl mx-auto py-4 px-4 pb-20 relative">
       <VocalRangePrompt isMissing={isVocalRangeMissing} />
 
-      <ClientSongList 
-        initialSongs={allSongs} 
-        userName={user?.name || "ゲスト"} 
+      <ClientSongList
+        initialSongs={allSongs}
+        userName={user?.name || "ゲスト"}
       />
     </div>
   );

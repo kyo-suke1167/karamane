@@ -23,7 +23,7 @@ export default async function EditSongPage({ params }: Props) {
       <h1 className="text-2xl font-bold mb-6 flex items-center gap-2">
         ✏️ 登録情報を編集
       </h1>
-      
+
       <EditSongForm song={song} />
     </div>
   );

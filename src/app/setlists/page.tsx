@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { SetlistList } from "@/components/setlist/SetlistList"; 
+import { SetlistList } from "@/components/setlist/SetlistList";
 import { redirect } from "next/navigation";
 
 export default async function SetlistsPage() {
@@ -25,7 +25,7 @@ export default async function SetlistsPage() {
   });
 
   return (
-    <div className="pb-20"> 
+    <div className="pb-20">
       <SetlistList setlists={setlists} />
     </div>
   );

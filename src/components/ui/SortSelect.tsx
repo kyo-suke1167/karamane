@@ -27,7 +27,6 @@ export function SortSelect() {
         <option value="oldest">登録が古い順</option>
         <option value="title_asc">曲名 (A-Z)</option>
         <option value="artist_asc">歌手名 (A-Z)</option>
-        
       </select>
     </div>
   );

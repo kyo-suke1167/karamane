@@ -6,7 +6,9 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma as unknown as Parameters<typeof PrismaAdapter>[0]),
+  adapter: PrismaAdapter(
+    prisma as unknown as Parameters<typeof PrismaAdapter>[0],
+  ),
   session: {
     strategy: "jwt",
   },
@@ -15,7 +17,7 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       // 既存のCredentialsアカウントとGoogleアカウントを同一メールアドレスで紐付けるための設定
-      allowDangerousEmailAccountLinking: true, 
+      allowDangerousEmailAccountLinking: true,
     }),
 
     CredentialsProvider({
@@ -39,7 +41,7 @@ export const authOptions: NextAuthOptions = {
 
         const isValid = await bcrypt.compare(
           credentials.password,
-          user.password
+          user.password,
         );
 
         if (!isValid) {

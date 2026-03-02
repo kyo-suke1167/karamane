@@ -161,7 +161,11 @@ export function YoutubeImport() {
                   <select
                     value={song.status}
                     onChange={(e) =>
-                      updateSong(song.id, "status", e.target.value as SongStatus)
+                      updateSong(
+                        song.id,
+                        "status",
+                        e.target.value as SongStatus,
+                      )
                     }
                     className="w-28 bg-background border border-border rounded-md px-2 py-1 text-xs font-bold text-muted-foreground"
                   >
@@ -254,7 +258,11 @@ export function YoutubeImport() {
                     <select
                       value={song.status}
                       onChange={(e) =>
-                        updateSong(song.id, "status", e.target.value as SongStatus)
+                        updateSong(
+                          song.id,
+                          "status",
+                          e.target.value as SongStatus,
+                        )
                       }
                       className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm font-bold"
                     >

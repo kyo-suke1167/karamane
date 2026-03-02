@@ -30,7 +30,10 @@ type YoutubePlaylistItem = {
 export async function fetchYoutubePlaylist(url: string) {
   const playlistId = extractPlaylistId(url);
   if (!playlistId)
-    return { error: "無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。" };
+    return {
+      error:
+        "無効なYouTubeプレイリストURLです。「list=...」が含まれているか確認してください。",
+    };
 
   const apiKey = process.env.YOUTUBE_API_KEY;
   if (!apiKey)
@@ -45,7 +48,9 @@ export async function fetchYoutubePlaylist(url: string) {
       where: { userId, youtubeUrl: { not: null } },
       select: { youtubeUrl: true },
     });
-    existingUrls = existingSongs.map((s) => s.youtubeUrl).filter(Boolean) as string[];
+    existingUrls = existingSongs
+      .map((s) => s.youtubeUrl)
+      .filter(Boolean) as string[];
   }
 
   try {
@@ -59,7 +64,8 @@ export async function fetchYoutubePlaylist(url: string) {
       return { error: `YouTube APIエラー: ${playlistData.error.message}` };
     }
 
-    const playlistTitle = playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
+    const playlistTitle =
+      playlistData.items?.[0]?.snippet?.title || "インポートしたセットリスト";
 
     let allItems: YoutubePlaylistItem[] = [];
     let nextPageToken = "";
@@ -68,29 +74,36 @@ export async function fetchYoutubePlaylist(url: string) {
 
     do {
       const apiUrl = `https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=${playlistId}&key=${apiKey}${nextPageToken ? `&pageToken=${nextPageToken}` : ""}`;
-      
+
       const itemsRes = await fetch(apiUrl, { cache: "no-store" });
       const itemsData = await itemsRes.json();
 
       if (!itemsData.items) {
-        if (pageCount === 0) return { error: "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。" };
+        if (pageCount === 0)
+          return {
+            error:
+              "プレイリストが取得できませんでした。限定公開か公開設定になっているか確認してください。",
+          };
         break; // 2ページ目以降でカラの場合はループ終了
       }
 
       allItems = [...allItems, ...itemsData.items];
       nextPageToken = itemsData.nextPageToken;
       pageCount++;
-
     } while (nextPageToken && pageCount < maxPages);
 
     const songs = allItems
       .map((item: YoutubePlaylistItem) => {
         const rawTitle = item.snippet.title;
-        if (rawTitle === "Private video" || rawTitle === "Deleted video") return null;
+        if (rawTitle === "Private video" || rawTitle === "Deleted video")
+          return null;
 
         const videoId = item.snippet.resourceId.videoId;
         const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        const channelTitle = item.snippet.videoOwnerChannelTitle || item.snippet.channelTitle || "";
+        const channelTitle =
+          item.snippet.videoOwnerChannelTitle ||
+          item.snippet.channelTitle ||
+          "";
 
         let title = rawTitle;
         let artist = "";
@@ -111,17 +124,29 @@ export async function fetchYoutubePlaylist(url: string) {
           }
         }
 
-        title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
-          .replace(/【.*?】/g, "").replace(/\[.*?\]/g, "").replace(/[()（）]/g, "").trim();
+        title = title
+          .replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+          .replace(/【.*?】/g, "")
+          .replace(/\[.*?\]/g, "")
+          .replace(/[()（）]/g, "")
+          .trim();
 
         artist = artist.replace(/Official|Channel/gi, "").trim();
-        const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+        const cleanChannelName = channelTitle
+          .replace(/ - Topic|Official|Channel|公式/gi, "")
+          .trim();
         const finalArtist = artist || cleanChannelName;
         let finalTitle = title;
 
-        if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
+        if (
+          finalArtist &&
+          finalTitle.includes(finalArtist) &&
+          finalTitle !== finalArtist
+        ) {
           finalTitle = finalTitle.replace(finalArtist, "").trim();
-          finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
+          finalTitle = finalTitle
+            .replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "")
+            .trim();
         }
 
         const isDuplicate = existingUrls.includes(youtubeUrl);
@@ -162,8 +187,10 @@ export async function fetchYoutubeVideo(url: string) {
     );
     const data = await res.json();
 
-    if (data.error) return { error: `YouTube APIエラー: ${data.error.message}` };
-    if (!data.items || data.items.length === 0) return { error: "動画が見つかりませんでした。" };
+    if (data.error)
+      return { error: `YouTube APIエラー: ${data.error.message}` };
+    if (!data.items || data.items.length === 0)
+      return { error: "動画が見つかりませんでした。" };
 
     const snippet = data.items[0].snippet;
     const rawTitle = snippet.title;
@@ -188,15 +215,25 @@ export async function fetchYoutubeVideo(url: string) {
       }
     }
 
-    title = title.replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
-      .replace(/【.*?】/g, "").replace(/\[.*?\]/g, "").replace(/[()（）]/g, "").trim();
+    title = title
+      .replace(/Official|Music Video|MV|Lyric Video|Audio/gi, "")
+      .replace(/【.*?】/g, "")
+      .replace(/\[.*?\]/g, "")
+      .replace(/[()（）]/g, "")
+      .trim();
 
     artist = artist.replace(/Official|Channel/gi, "").trim();
-    const cleanChannelName = channelTitle.replace(/ - Topic|Official|Channel|公式/gi, "").trim();
+    const cleanChannelName = channelTitle
+      .replace(/ - Topic|Official|Channel|公式/gi, "")
+      .trim();
     const finalArtist = artist || cleanChannelName;
     let finalTitle = title;
 
-    if (finalArtist && finalTitle.includes(finalArtist) && finalTitle !== finalArtist) {
+    if (
+      finalArtist &&
+      finalTitle.includes(finalArtist) &&
+      finalTitle !== finalArtist
+    ) {
       finalTitle = finalTitle.replace(finalArtist, "").trim();
       finalTitle = finalTitle.replace(/^[-\s/・〜]+|[-\s/・〜]+$/g, "").trim();
     }
@@ -220,7 +257,10 @@ type ImportSongData = {
   memo: string;
 };
 
-export async function saveImportedSongs(songs: ImportSongData[], setlistTitle?: string) {
+export async function saveImportedSongs(
+  songs: ImportSongData[],
+  setlistTitle?: string,
+) {
   const session = await getServerSession(authOptions);
   if (!session || !session.user) throw new Error("ログインしてください");
   const userId = session.user.id;
