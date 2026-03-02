@@ -6,6 +6,10 @@ import { usePathname } from "next/navigation";
 export function Footer() {
   const pathname = usePathname();
 
+  if (pathname?.startsWith("/u/")) {
+    return null;
+  }
+
   const isActive = (path: string) => pathname === path;
 
   return (
