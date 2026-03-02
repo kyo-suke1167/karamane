@@ -6,17 +6,18 @@ const getNoteFromPitch = (frequency: number) => {
   return Math.round(noteNum) + 69;
 };
 
-// 音量の足切りライン（0〜100）
 const MIN_VOLUME = 20;
-// 同じ音を何フレーム連続で出せたら「歌声」とみなすか
 const MIN_SUSTAIN_FRAMES = 30;
 
-export function usePitchMeasurement() {
-  const [isListening, setIsListening] = useState(false);
-  const [volume, setVolume] = useState(0);
-  const [pitch, setPitch] = useState<number | null>(null);
-  const [noteNum, setNoteNum] = useState<number | null>(null);
+export type PitchData = {
+  volume: number;
+  pitch: number | null;
+  noteNum: number | null;
+};
 
+export function usePitchMeasurement(onUpdate?: (data: PitchData) => void) {
+  const [isListening, setIsListening] = useState(false);
+  
   const [lowestNote, setLowestNote] = useState<number | null>(null);
   const [highestNote, setHighestNote] = useState<number | null>(null);
 
@@ -28,6 +29,12 @@ export function usePitchMeasurement() {
 
   const sustainedNoteRef = useRef<number | null>(null);
   const sustainCountRef = useRef<number>(0);
+
+  // コールバックを最新に保つためのRef（再描画ループを防ぐため）
+  const onUpdateRef = useRef(onUpdate);
+  useEffect(() => {
+    onUpdateRef.current = onUpdate;
+  }, [onUpdate]);
 
   const updatePitch = useCallback(function loop() {
     if (!analyserRef.current || !detectPitchRef.current) return;
@@ -41,21 +48,22 @@ export function usePitchMeasurement() {
     }
     const rms = Math.sqrt(sum / float32Array.length);
     const newVolume = Math.min(100, Math.floor(rms * 1000));
-    setVolume(newVolume);
+
+    let currentPitch: number | null = null;
+    let currentNoteNum: number | null = null;
 
     if (newVolume >= MIN_VOLUME) {
       const detectedPitch = detectPitchRef.current(float32Array);
       if (detectedPitch) {
-        setPitch(Math.round(detectedPitch));
-        const currentNoteNum = getNoteFromPitch(detectedPitch);
-        setNoteNum(currentNoteNum);
+        currentPitch = Math.round(detectedPitch);
+        currentNoteNum = getNoteFromPitch(detectedPitch);
 
         if (currentNoteNum >= 36 && currentNoteNum <= 84) {
           if (currentNoteNum === sustainedNoteRef.current) {
             sustainCountRef.current += 1;
             if (sustainCountRef.current >= MIN_SUSTAIN_FRAMES) {
-              setLowestNote((prev) => (prev === null || currentNoteNum < prev) ? currentNoteNum : prev);
-              setHighestNote((prev) => (prev === null || currentNoteNum > prev) ? currentNoteNum : prev);
+              setLowestNote((prev) => (prev === null || currentNoteNum! < prev) ? currentNoteNum! : prev);
+              setHighestNote((prev) => (prev === null || currentNoteNum! > prev) ? currentNoteNum! : prev);
             }
           } else {
             sustainedNoteRef.current = currentNoteNum;
@@ -63,16 +71,16 @@ export function usePitchMeasurement() {
           }
         }
       } else {
-        setPitch(null);
-        setNoteNum(null);
         sustainedNoteRef.current = null;
         sustainCountRef.current = 0;
       }
     } else {
-      setPitch(null);
-      setNoteNum(null);
       sustainedNoteRef.current = null;
       sustainCountRef.current = 0;
+    }
+
+    if (onUpdateRef.current) {
+      onUpdateRef.current({ volume: newVolume, pitch: currentPitch, noteNum: currentNoteNum });
     }
 
     requestRef.current = requestAnimationFrame(loop);
@@ -99,8 +107,6 @@ export function usePitchMeasurement() {
       sustainCountRef.current = 0;
 
       setIsListening(true);
-      
-      // requestAnimationFrameを使うため、初回を呼び出す
       requestRef.current = requestAnimationFrame(updatePitch);
     } catch (err: unknown) {
       console.error("マイクへのアクセスに失敗しました:", err);
@@ -116,11 +122,12 @@ export function usePitchMeasurement() {
     }
 
     setIsListening(false);
-    setVolume(0);
-    setPitch(null);
-    setNoteNum(null);
     sustainedNoteRef.current = null;
     sustainCountRef.current = 0;
+    
+    if (onUpdateRef.current) {
+      onUpdateRef.current({ volume: 0, pitch: null, noteNum: null });
+    }
   }, []);
 
   const resetRecords = () => {
@@ -134,12 +141,8 @@ export function usePitchMeasurement() {
     return () => stopListening();
   }, [stopListening]);
 
-  // コンポーネント（画面）側に渡すデータと関数をまとめる
   return {
     isListening,
-    volume,
-    pitch,
-    noteNum,
     lowestNote,
     highestNote,
     startListening,

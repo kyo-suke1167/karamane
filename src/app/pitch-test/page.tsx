@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef, useCallback } from "react";
 import { getNoteName as getKaraokeNoteName } from "@/lib/noteUtils";
 import { saveVocalRange } from "@/actions/user";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { usePitchMeasurement } from "@/hooks/usePitchMeasurement";
+import { usePitchMeasurement, type PitchData } from "@/hooks/usePitchMeasurement";
 
-// 音量の足切りライン（表示用）
 const MIN_VOLUME = 20;
 
 export default function PitchTestPage() {
@@ -15,22 +14,48 @@ export default function PitchTestPage() {
   const [isPending, startTransition] = useTransition();
   const [saveMessage, setSaveMessage] = useState("");
 
-  // カスタムフックから必要なデータと関数を受け取る
+  const noteDisplayRef = useRef<HTMLDivElement>(null);
+  const hzDisplayRef = useRef<HTMLParagraphElement>(null);
+  const volumeBarRef = useRef<HTMLDivElement>(null);
+
+  const getDisplayNote = (num: number | null) => {
+    if (num === null) return "-";
+    return getKaraokeNoteName(num);
+  };
+
+  const handlePitchUpdate = useCallback((data: PitchData) => {
+    const valid = data.volume >= MIN_VOLUME;
+
+    if (noteDisplayRef.current) {
+      noteDisplayRef.current.innerText = getDisplayNote(data.noteNum);
+      noteDisplayRef.current.className = `text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors ${
+        valid ? "text-primary" : "text-muted-foreground/30"
+      }`;
+    }
+
+    if (hzDisplayRef.current) {
+      hzDisplayRef.current.innerText = data.pitch && valid ? `${data.pitch} Hz` : "--- Hz";
+    }
+
+    if (volumeBarRef.current) {
+      volumeBarRef.current.style.width = `${data.volume}%`;
+      volumeBarRef.current.className = `h-full transition-all duration-75 ease-out ${
+        valid ? "bg-primary" : "bg-primary/30"
+      }`;
+    }
+  }, []);
+
   const {
     isListening,
-    volume,
-    pitch,
-    noteNum,
     lowestNote,
     highestNote,
     startListening,
     stopListening,
     resetRecords: hookResetRecords,
-  } = usePitchMeasurement();
+  } = usePitchMeasurement(handlePitchUpdate);
 
   const handleSaveToProfile = () => {
     if (lowestNote === null || highestNote === null) return;
-
     startTransition(async () => {
       try {
         await saveVocalRange(lowestNote, highestNote);
@@ -45,11 +70,6 @@ export default function PitchTestPage() {
   const resetRecords = () => {
     hookResetRecords();
     setSaveMessage("");
-  };
-
-  const getDisplayNote = (num: number | null) => {
-    if (num === null) return "-";
-    return getKaraokeNoteName(num);
   };
 
   const getPraiseMessage = () => {
@@ -70,7 +90,6 @@ export default function PitchTestPage() {
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           🎙️ 音域測定
         </h1>
-        
         <Link 
           href="/settings/profile" 
           className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors bg-muted hover:bg-border px-3 py-1.5 rounded-lg flex items-center gap-1"
@@ -102,18 +121,22 @@ export default function PitchTestPage() {
 
         <div className="text-center py-6 bg-background rounded-xl border border-border relative overflow-hidden">
           <p className="text-sm font-bold text-muted-foreground mb-1 relative z-10">現在の音</p>
-          <div className={`text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors ${volume >= MIN_VOLUME ? 'text-primary' : 'text-muted-foreground/30'}`}>
-            {getDisplayNote(noteNum)}
+          
+          <div ref={noteDisplayRef} className="text-6xl font-black tracking-tighter mb-1 relative z-10 min-h-18 transition-colors text-muted-foreground/30">
+            -
           </div>
-          <p className="text-xs text-muted-foreground font-mono relative z-10">
-            {pitch && volume >= MIN_VOLUME ? `${pitch} Hz` : "--- Hz"}
+          
+          <p ref={hzDisplayRef} className="text-xs text-muted-foreground font-mono relative z-10">
+            --- Hz
           </p>
           
           <div className="absolute bottom-0 left-0 w-full h-2 bg-muted">
             <div className="absolute top-0 bottom-0 w-0.5 bg-red-500 z-10" style={{ left: `${MIN_VOLUME}%` }} />
+            
             <div 
-              className={`h-full transition-all duration-75 ease-out ${volume >= MIN_VOLUME ? 'bg-primary' : 'bg-primary/30'}`}
-              style={{ width: `${volume}%` }}
+              ref={volumeBarRef}
+              className="h-full transition-all duration-75 ease-out bg-primary/30"
+              style={{ width: "0%" }}
             />
           </div>
         </div>
@@ -141,7 +164,6 @@ export default function PitchTestPage() {
           )}
         </div>
 
-        {/* ボタンエリア */}
         <div className="flex flex-col gap-3 pt-2">
           {isListening ? (
             <button onClick={stopListening} className="bg-red-500/10 text-red-500 hover:bg-red-500/20 border border-red-500/30 font-bold py-3 rounded-xl transition-colors w-full">
@@ -166,7 +188,6 @@ export default function PitchTestPage() {
             </div>
           )}
 
-          {/* 保存ボタン */}
           {lowestNote !== null && highestNote !== null && !isListening && (
             <div className="mt-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
               <button 
