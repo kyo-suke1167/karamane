@@ -8,79 +8,84 @@ import { songSchema, type SongSchema } from "@/lib/schema";
 
 export async function createSong(data: SongSchema) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
 
-  const parsed = songSchema.parse(data);
+  try {
+    const parsed = songSchema.parse(data);
 
-  await prisma.song.create({
-    data: { ...parsed, userId: session.user.id },
-  });
+    await prisma.song.create({
+      data: { ...parsed, userId: session.user.id },
+    });
+  } catch (error) {
+    console.error("createSong error:", error);
+    return { error: "曲の登録に失敗しました。入力内容を確認してください。" };
+  }
 
   redirect("/");
 }
 
-export async function updateSong(formData: FormData) {
+export async function updateSong(id: number, data: SongSchema) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
 
-  const id = Number(formData.get("id"));
-  if (!id || isNaN(id)) throw new Error("IDが存在しません");
+  try {
+    const existingSong = await prisma.song.findUnique({ where: { id } });
+    if (!existingSong || existingSong.userId !== session.user.id) {
+      return { error: "更新する権限がありません" };
+    }
 
-  const existingSong = await prisma.song.findUnique({ where: { id } });
-  if (!existingSong || existingSong.userId !== session.user.id) {
-    throw new Error("更新する権限がありません");
+    const parsed = songSchema.parse(data);
+
+    await prisma.song.update({
+      where: { id },
+      data: parsed,
+    });
+  } catch (error) {
+    console.error("updateSong error:", error);
+    return { error: "曲の更新に失敗しました。入力内容を確認してください。" };
   }
-
-  const rawMinNoteId = formData.get("minNoteId");
-  const rawMaxNoteId = formData.get("maxNoteId");
-
-  const rawData = {
-    title: formData.get("title"),
-    artist: formData.get("artist"),
-    youtubeUrl: formData.get("youtubeUrl"),
-    memo: formData.get("memo"),
-    status: formData.get("status"),
-    minNoteId: rawMinNoteId === "" ? null : rawMinNoteId,
-    maxNoteId: rawMaxNoteId === "" ? null : rawMaxNoteId,
-  };
-
-  const parsed = songSchema.parse(rawData);
-
-  await prisma.song.update({
-    where: { id },
-    data: parsed,
-  });
 
   redirect(`/songs/${id}`);
 }
 
 export async function updateSongKey(songId: number, newKey: number) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
 
-  const result = await prisma.song.updateMany({
-    where: { id: songId, userId: session.user.id },
-    data: { key: newKey },
-  });
+  try {
+    const result = await prisma.song.updateMany({
+      where: { id: songId, userId: session.user.id },
+      data: { key: newKey },
+    });
 
-  if (result.count === 0) {
-    throw new Error("曲が見つからないか、更新する権限がありません");
+    if (result.count === 0) {
+      return { error: "曲が見つからないか、更新する権限がありません" };
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("updateSongKey error:", error);
+    return { error: "キーの更新に失敗しました" };
   }
 }
 
 export async function deleteSong(songId: number) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
 
-  const result = await prisma.song.deleteMany({
-    where: {
-      id: songId,
-      userId: session.user.id,
-    },
-  });
+  try {
+    const result = await prisma.song.deleteMany({
+      where: {
+        id: songId,
+        userId: session.user.id,
+      },
+    });
 
-  if (result.count === 0) {
-    throw new Error("曲が見つからないか、削除する権限がありません");
+    if (result.count === 0) {
+      return { error: "曲が見つからないか、削除する権限がありません" };
+    }
+  } catch (error) {
+    console.error("deleteSong error:", error);
+    return { error: "曲の削除に失敗しました" };
   }
 
   redirect("/");
@@ -99,12 +104,18 @@ export async function getUserSongsForModal() {
 
 export async function deleteSongs(songIds: number[]) {
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
 
-  await prisma.song.deleteMany({
-    where: {
-      id: { in: songIds },
-      userId: session.user.id,
-    },
-  });
+  try {
+    await prisma.song.deleteMany({
+      where: {
+        id: { in: songIds },
+        userId: session.user.id,
+      },
+    });
+    return { success: true };
+  } catch (error) {
+    console.error("deleteSongs error:", error);
+    return { error: "曲の一括削除に失敗しました" };
+  }
 }

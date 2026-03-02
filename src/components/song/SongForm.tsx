@@ -6,6 +6,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import type { Song } from "@/generated/prisma";
+import type { SongSchema } from "@/lib/schema";
 
 type Props = {
   song: Song;
@@ -32,25 +33,48 @@ function SubmitButton({ isInvalid }: { isInvalid: boolean }) {
 export default function EditSongForm({ song }: Props) {
   const [minNoteId, setMinNoteId] = useState<number | null>(song.minNoteId);
   const [maxNoteId, setMaxNoteId] = useState<number | null>(song.maxNoteId);
+  const [serverError, setServerError] = useState("");
 
   const isInvalid =
     minNoteId !== null && maxNoteId !== null && minNoteId > maxNoteId;
 
+  const handleUpdate = async (formData: FormData) => {
+    setServerError("");
+
+    const rawMinNoteId = formData.get("minNoteId");
+    const rawMaxNoteId = formData.get("maxNoteId");
+
+    const dataToUpdate: SongSchema = {
+      title: formData.get("title") as string,
+      artist: formData.get("artist") as string,
+      youtubeUrl: (formData.get("youtubeUrl") as string) || undefined,
+      status: formData.get("status") as SongSchema["status"],
+      minNoteId: rawMinNoteId === "" ? null : Number(rawMinNoteId),
+      maxNoteId: rawMaxNoteId === "" ? null : Number(rawMaxNoteId),
+      memo: (formData.get("memo") as string) || undefined,
+    };
+
+    const result = await updateSong(song.id, dataToUpdate);
+    if (result?.error) {
+      setServerError(result.error);
+    }
+  };
+
   const handleDelete = async () => {
     const isConfirmed = confirm("本当にこの曲を削除してもいいですか？");
     if (isConfirmed) {
-      await deleteSong(song.id);
+      const result = await deleteSong(song.id);
+      if (result?.error) {
+        alert(result.error);
+      }
     }
   };
 
   return (
     <form
-      action={updateSong}
+      action={handleUpdate}
       className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6 transition-colors"
     >
-      <input type="hidden" name="id" value={song.id} />
-
-      {/* 曲名 */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">
           曲名 <span className="text-red-500">*</span>
@@ -64,7 +88,6 @@ export default function EditSongForm({ song }: Props) {
         />
       </div>
 
-      {/* アーティスト */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">
           アーティスト <span className="text-red-500">*</span>
@@ -78,7 +101,6 @@ export default function EditSongForm({ song }: Props) {
         />
       </div>
 
-      {/* YouTube URL */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">
           YouTube URL
@@ -91,7 +113,6 @@ export default function EditSongForm({ song }: Props) {
         />
       </div>
 
-      {/* ステータス選択 */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-2">
           今のレベル
@@ -130,7 +151,6 @@ export default function EditSongForm({ song }: Props) {
         </div>
       </div>
 
-      {/* 音域入力 */}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-foreground mb-1">
@@ -209,7 +229,6 @@ export default function EditSongForm({ song }: Props) {
         </div>
       </div>
 
-      {/* メモ */}
       <div>
         <label className="block text-sm font-medium text-foreground mb-1">
           メモ
@@ -222,16 +241,19 @@ export default function EditSongForm({ song }: Props) {
         />
       </div>
 
-      {/* エラー表示 */}
       {isInvalid && (
         <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
           ⚠️ 最低音が最高音より高くなっています。修正してください。
         </div>
       )}
 
-      {/* ボタン */}
+      {serverError && (
+        <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
+          ⚠️ {serverError}
+        </div>
+      )}
+
       <div className="flex flex-wrap justify-between items-center gap-4 pt-6 border-t border-border mt-6">
-        {/* 削除ボタン */}
         <button
           type="button"
           onClick={handleDelete}
@@ -240,7 +262,6 @@ export default function EditSongForm({ song }: Props) {
           この曲を削除する
         </button>
 
-        {/* キャンセル、更新ボタン */}
         <div className="flex gap-3 w-full sm:w-auto">
           <Link
             href={`/songs/${song.id}`}
@@ -248,7 +269,6 @@ export default function EditSongForm({ song }: Props) {
           >
             キャンセル
           </Link>
-          {/* 抽出したカスタムボタンを配置 */}
           <SubmitButton isInvalid={isInvalid} />
         </div>
       </div>

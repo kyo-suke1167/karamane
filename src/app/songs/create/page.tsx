@@ -34,7 +34,10 @@ export default function CreateSongPage() {
 
   const onSubmit = (data: SongSchema) => {
     startTransition(async () => {
-      await createSong(data);
+      const result = await createSong(data);
+      if (result?.error) {
+        alert(result.error);
+      }
     });
   };
 
