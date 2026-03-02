@@ -87,7 +87,6 @@ export function useYoutubeImport() {
     }
 
     startTransition(async () => {
-      // 🌟 エラーハンドリング追加：万が一の通信エラーでもフリーズさせない！
       try {
         const dataToSave = selectedSongs.map(
           ({ title, artist, youtubeUrl, status, key, memo }) => ({
