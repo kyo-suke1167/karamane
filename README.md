@@ -41,7 +41,7 @@ Karamane（カラマネ）は、そんなカラオケ好きの悩みを解決す
 
 モダンなフロントエンド技術と、堅牢なバックエンド設計を組み合わせて開発しています。
 
-- Framework: Next.js 15 (App Router)
+- Framework: Next.js 16.1.5 (App Router)
 - Language: TypeScript
 - Styling: Tailwind CSS v4
 - Database: PostgreSQL (Neon)
