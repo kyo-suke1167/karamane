@@ -1,7 +1,6 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { SongStatus } from "@/generated/prisma";
@@ -260,46 +259,53 @@ type ImportSongData = {
 export async function saveImportedSongs(
   songs: ImportSongData[],
   setlistTitle?: string,
-) {
+): Promise<{ success?: boolean; error?: string }> {
+  
   const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  if (!session || !session.user) return { error: "ログインしてください" };
   const userId = session.user.id;
 
-  if (songs.length === 0) return;
+  if (songs.length === 0) return { error: "保存する曲がありません" };
 
-  const createdSongs = await prisma.$transaction(
-    songs.map((song) =>
-      prisma.song.create({
+  try {
+    const createdSongs = await prisma.$transaction(
+      songs.map((song) =>
+        prisma.song.create({
+          data: {
+            title: song.title,
+            artist: song.artist,
+            youtubeUrl: song.youtubeUrl,
+            status: song.status,
+            key: song.key,
+            memo: song.memo,
+            userId,
+          },
+        }),
+      ),
+    );
+
+    if (setlistTitle) {
+      const setlist = await prisma.setlist.create({
         data: {
-          title: song.title,
-          artist: song.artist,
-          youtubeUrl: song.youtubeUrl,
-          status: song.status,
-          key: song.key,
-          memo: song.memo,
+          title: setlistTitle,
+          description: "YouTubeからインポート",
           userId,
         },
-      }),
-    ),
-  );
+      });
 
-  if (setlistTitle) {
-    const setlist = await prisma.setlist.create({
-      data: {
-        title: setlistTitle,
-        description: "YouTubeからインポート",
-        userId,
-      },
-    });
+      await prisma.setlistEntry.createMany({
+        data: createdSongs.map((song, index) => ({
+          setlistId: setlist.id,
+          songId: song.id,
+          order: index,
+        })),
+      });
+    }
 
-    await prisma.setlistEntry.createMany({
-      data: createdSongs.map((song, index) => ({
-        setlistId: setlist.id,
-        songId: song.id,
-        order: index,
-      })),
-    });
+    return { success: true };
+
+  } catch (error) {
+    console.error("保存中にエラー:", error);
+    return { error: "データベースの保存に失敗しました。" };
   }
-
-  redirect("/");
 }

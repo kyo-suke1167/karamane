@@ -1,9 +1,12 @@
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation"; // 🌟 追加：ルーターを呼び出す！
 import { fetchYoutubePlaylist, saveImportedSongs } from "@/actions/youtube";
 import { SongStatus } from "@/generated/prisma";
 import type { PreviewSong } from "@/types";
 
 export function useYoutubeImport() {
+  const router = useRouter(); // 🌟 追加：画面遷移用の魔法の杖！
+
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");
   const [songs, setSongs] = useState<PreviewSong[]>([]);
@@ -101,10 +104,19 @@ export function useYoutubeImport() {
           }),
         );
 
-        await saveImportedSongs(
+        const result = await saveImportedSongs(
           dataToSave,
           createSetlist ? setlistName : undefined,
         );
+
+        if (result && result.error) {
+          alert(result.error);
+        } else {
+          alert(`${selectedSongs.length} 曲の登録が完了しました！`);
+          
+          router.push("/");
+        }
+        
       } catch (err: unknown) {
         console.error("保存エラー:", err);
         alert(
@@ -126,7 +138,6 @@ export function useYoutubeImport() {
     }
   };
 
-  // 画面（コンポーネント）側で必要な変数と関数を全部まとめて返す
   return {
     url,
     setUrl,
