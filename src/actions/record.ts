@@ -1,9 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
+import { requireAuth } from "@/lib/auth-utils";
 
 export async function addSingingRecord(data: {
   songId: number;
@@ -11,12 +10,11 @@ export async function addSingingRecord(data: {
   key?: number | null;
   memo?: string | null;
 }) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  const userId = await requireAuth();
 
   await prisma.singingRecord.create({
     data: {
-      userId: session.user.id,
+      userId,
       songId: data.songId,
       score: data.score,
       key: data.key,
@@ -28,13 +26,12 @@ export async function addSingingRecord(data: {
 }
 
 export async function deleteSingingRecord(recordId: number, songId: number) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  const userId = await requireAuth();
 
-  await prisma.singingRecord.delete({
+  await prisma.singingRecord.deleteMany({
     where: {
       id: recordId,
-      userId: session.user.id,
+      userId,
     },
   });
 

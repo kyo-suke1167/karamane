@@ -1,10 +1,9 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { signupSchema, profileSchema, type SignupSchema } from "@/lib/schema";
+import { requireAuth } from "@/lib/auth-utils";
 
 export async function registerUser(data: SignupSchema) {
   const parsed = signupSchema.parse(data);
@@ -27,8 +26,7 @@ export async function checkEmail(email: string) {
 }
 
 export async function updateProfile(formData: FormData) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  const userId = await requireAuth();
 
   const rawData = {
     name: formData.get("name"),
@@ -39,17 +37,16 @@ export async function updateProfile(formData: FormData) {
   const parsed = profileSchema.parse(rawData);
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: userId },
     data: parsed,
   });
 }
 
 export async function saveVocalRange(minNoteId: number, maxNoteId: number) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) throw new Error("ログインしてください");
+  const userId = await requireAuth();
 
   await prisma.user.update({
-    where: { id: session.user.id },
+    where: { id: userId },
     data: { minNoteId, maxNoteId },
   });
 }

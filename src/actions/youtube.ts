@@ -1,9 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { SongStatus } from "@/generated/prisma";
+import { requireAuth } from "@/lib/auth-utils";
 
 function extractPlaylistId(url: string) {
   const match = url.match(/[?&]list=([a-zA-Z0-9_-]+)/);
@@ -38,19 +37,20 @@ export async function fetchYoutubePlaylist(url: string) {
   if (!apiKey)
     return { error: "APIキーが設定されていません。管理者に連絡してください。" };
 
-  const session = await getServerSession(authOptions);
-  const userId = session?.user?.id;
-  let existingUrls: string[] = [];
-
-  if (userId) {
-    const existingSongs = await prisma.song.findMany({
-      where: { userId, youtubeUrl: { not: null } },
-      select: { youtubeUrl: true },
-    });
-    existingUrls = existingSongs
-      .map((s) => s.youtubeUrl)
-      .filter(Boolean) as string[];
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return { error: "ログインしてください" };
   }
+
+  const existingSongs = await prisma.song.findMany({
+    where: { userId, youtubeUrl: { not: null } },
+    select: { youtubeUrl: true },
+  });
+  const existingUrls = existingSongs
+    .map((s) => s.youtubeUrl)
+    .filter(Boolean) as string[];
 
   try {
     const playlistRes = await fetch(
@@ -261,28 +261,27 @@ export async function saveImportedSongs(
   setlistTitle?: string,
 ): Promise<{ success?: boolean; error?: string }> {
   
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user) return { error: "ログインしてください" };
-  const userId = session.user.id;
+  let userId: string;
+  try {
+    userId = await requireAuth();
+  } catch {
+    return { error: "ログインしてください" };
+  }
 
   if (songs.length === 0) return { error: "保存する曲がありません" };
 
   try {
-    const createdSongs = await prisma.$transaction(
-      songs.map((song) =>
-        prisma.song.create({
-          data: {
-            title: song.title,
-            artist: song.artist,
-            youtubeUrl: song.youtubeUrl,
-            status: song.status,
-            key: song.key,
-            memo: song.memo,
-            userId,
-          },
-        }),
-      ),
-    );
+    const createdSongs = await prisma.song.createManyAndReturn({
+      data: songs.map((song) => ({
+        title: song.title,
+        artist: song.artist,
+        youtubeUrl: song.youtubeUrl,
+        status: song.status,
+        key: song.key,
+        memo: song.memo,
+        userId,
+      })),
+    });
 
     if (setlistTitle) {
       const setlist = await prisma.setlist.create({
