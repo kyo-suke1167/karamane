@@ -30,9 +30,10 @@ export default function Header({ currentUser }: Props) {
 
   const displayName = currentUser?.name || session?.user?.name;
   const pathname = usePathname();
-  const isSetlistDetail = /^\/setlists\/\d+$/.test(pathname);
+  const isSetlistDetail = /^\/setlists\/\d+$/.test(pathname || "");
+  const isPublicPage = pathname?.startsWith("/u/");
 
-  if (isSetlistDetail) return null;
+  if (isSetlistDetail || isPublicPage) return null;
 
   return (
     <header className="bg-card border-b border-border sticky top-0 z-20 transition-colors duration-300">
