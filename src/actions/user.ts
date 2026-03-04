@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { Prisma } from "@prisma/client";
+import { Prisma } from "@/generated/prisma";
 import bcrypt from "bcryptjs";
 import { signupSchema, profileSchema, type SignupSchema } from "@/lib/schema";
 import { requireAuth } from "@/lib/auth-utils";
