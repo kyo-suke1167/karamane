@@ -52,7 +52,7 @@ export default function CreateSongPage() {
     try {
       const data = await fetchYoutubeVideo(url);
 
-      if (data.error) {
+      if ("error" in data) {
         alert(data.error);
         return;
       }
