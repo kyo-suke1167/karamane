@@ -23,7 +23,8 @@
     "tailwind",
     "UIUX",
     "Vaundy",
-    "youtu"
+    "youtu",
+    "ytimg"
   ],
   "ignorePaths": [
     "node_modules",

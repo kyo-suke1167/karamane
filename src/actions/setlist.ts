@@ -54,7 +54,13 @@ export async function addSongToSetlist(setlistId: number, songId: number) {
   const setlist = await prisma.setlist.findFirst({
     where: { id: setlistId, userId },
   });
-  if (!setlist) throw new Error("権限がありません");
+  if (!setlist) throw new Error("セトリの権限がありません");
+
+  // この曲（songId）が本当に自分のものかチェック
+  const song = await prisma.song.findUnique({
+    where: { id: songId, userId },
+  });
+  if (!song) throw new Error("他人の曲は追加できません");
 
   const maxOrderEntry = await prisma.setlistEntry.findFirst({
     where: { setlistId },
@@ -122,6 +128,18 @@ export async function addSongsToSetlist(setlistId: number, songIds: number[]) {
     where: { id: setlistId, userId },
   });
   if (!setlist) throw new Error("権限がありません");
+
+  // 送られてきた複数の曲（songIds）が、全部自分のものかチェック
+  const validSongsCount = await prisma.song.count({
+    where: {
+      id: { in: songIds },
+      userId: userId, 
+    },
+  });
+
+  if (validSongsCount !== songIds.length) {
+    throw new Error("不正な曲が含まれています。他人の曲は追加できません。");
+  }
 
   const maxOrderEntry = await prisma.setlistEntry.findFirst({
     where: { setlistId },

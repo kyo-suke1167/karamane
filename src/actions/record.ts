@@ -12,6 +12,12 @@ export async function addSingingRecord(data: {
 }) {
   const userId = await requireAuth();
 
+  // 履歴をつける対象の曲が、本当に自分のものかチェック
+  const song = await prisma.song.findUnique({
+    where: { id: data.songId, userId },
+  });
+  if (!song) throw new Error("対象の曲が見つからないか、権限がありません");
+
   await prisma.singingRecord.create({
     data: {
       userId,

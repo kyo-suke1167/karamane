@@ -71,15 +71,16 @@ export default async function Home() {
 
   const userId = session.user.id;
 
-  const allSongs = await prisma.song.findMany({
-    where: { userId: userId },
+  const [allSongs, user] = await Promise.all([
+  prisma.song.findMany({
+    where: { userId },
     orderBy: { createdAt: "desc" },
-    include: { user: true },
-  });
-
-  const user = await prisma.user.findUnique({
+  }),
+  prisma.user.findUnique({
     where: { id: userId },
-  });
+    select: { name: true, minNoteId: true, maxNoteId: true },
+  }),
+]);
 
   const isVocalRangeMissing =
     user?.minNoteId === null || user?.maxNoteId === null;

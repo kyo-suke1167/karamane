@@ -33,7 +33,7 @@ export default async function RootLayout({
 
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={`${inter.className} bg-gray-50 text-gray-800`}>
+      <body className={inter.className}>
         <Providers>
           <Header currentUser={currentUser} />
           <main className="max-w-4xl mx-auto p-4 min-h-[calc(100vh-64px)]">

@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getNoteName, getNoteColor } from "@/lib/noteUtils";
 import { getStatusStyle } from "@/lib/statusUtils";
-import { getYouTubeId } from "@/lib/youtubeUtils";
+import { extractVideoId } from "@/lib/youtubeUtils";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import KeyController from "@/components/vocal-range/KeyController";
@@ -28,30 +28,42 @@ export default async function SongDetailPage({ params, searchParams }: Props) {
     return notFound();
   }
 
-  const song = await prisma.song.findUnique({
-    where: { id: songId },
-    include: {
-      user: true,
-      singingRecords: {
-        orderBy: { createdAt: "desc" },
-      },
-    },
-  });
+  const session = await getServerSession(authOptions);
 
+  // 未ログインなら見せない！
+  if (!session?.user?.email) {
+    return notFound();
+  }
+
+  // 曲のデータと、ログインユーザーの音域データを同時に取得
+  const [song, currentUser] = await Promise.all([
+    // 曲のデータ取得（IDOR対策: 自分の曲しか取得できないようにする）
+    prisma.song.findFirst({
+      where: { 
+        id: songId,
+        user: { email: session.user.email }
+      },
+      include: {
+        user: { select: { name: true } },
+        singingRecords: {
+          orderBy: { createdAt: "desc" },
+        },
+      },
+    }),
+    // ログインユーザーの音域データ取得
+    prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { minNoteId: true, maxNoteId: true },
+    })
+  ]);
+
+  // 曲がなければ（または他人の曲なら） 404
   if (!song) {
     return notFound();
   }
 
-  const session = await getServerSession(authOptions);
-  let currentUser = null;
-  if (session?.user?.email) {
-    currentUser = await prisma.user.findUnique({
-      where: { email: session.user.email },
-    });
-  }
-
   const statusStyle = getStatusStyle(song.status);
-  const videoId = getYouTubeId(song.youtubeUrl);
+  const videoId = extractVideoId(song.youtubeUrl);
 
   return (
     <div className="max-w-2xl mx-auto pb-20 ">
