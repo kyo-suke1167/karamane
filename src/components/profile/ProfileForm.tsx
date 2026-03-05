@@ -6,7 +6,7 @@ import { NOTE_OPTIONS } from "@/lib/noteUtils";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import GoogleIcon from "@/components/ui/GoogleIcon";
+import { GoogleIcon } from "@/components/ui/Icons";
 
 type ProfileFormProps = {
   user: {

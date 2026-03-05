@@ -56,6 +56,12 @@ export async function addSongToSetlist(setlistId: number, songId: number) {
   });
   if (!setlist) throw new Error("セトリの権限がありません");
 
+  // 100曲制限チェック
+  const currentCount = await prisma.setlistEntry.count({ where: { setlistId } });
+  if (currentCount >= 100) {
+    throw new Error("1つのセットリストに登録できるのは最大100曲までです。");
+  }
+
   // この曲（songId）が本当に自分のものかチェック
   const song = await prisma.song.findUnique({
     where: { id: songId, userId },
@@ -90,20 +96,25 @@ export async function reorderSetlist(items: { id: number; order: number }[]) {
 
   await prisma.$transaction(
     async (tx) => {
-      await Promise.all(
-        items.map((item) =>
-          tx.setlistEntry.updateMany({
-            where: { 
-              id: item.id,
-              setlist: { userId }
-            },
-            data: { order: item.order },
-          }),
-        )
-      );
+      // 大量データでも安全なチャンク処理
+      const chunkSize = 50;
+      for (let i = 0; i < items.length; i += chunkSize) {
+        const chunk = items.slice(i, i + chunkSize);
+        await Promise.all(
+          chunk.map((item) =>
+            tx.setlistEntry.updateMany({
+              where: { 
+                id: item.id,
+                setlist: { userId }
+              },
+              data: { order: item.order },
+            }),
+          )
+        );
+      }
     },
     { 
-      timeout: 15000
+      timeout: 60000 
     }
   );
 }
@@ -128,6 +139,12 @@ export async function addSongsToSetlist(setlistId: number, songIds: number[]) {
     where: { id: setlistId, userId },
   });
   if (!setlist) throw new Error("権限がありません");
+
+  // 100曲制限チェック
+  const currentCount = await prisma.setlistEntry.count({ where: { setlistId } });
+  if (currentCount + songIds.length > 100) {
+    throw new Error(`セットリストの上限は100曲です（現在: ${currentCount}曲、追加予定: ${songIds.length}曲）。`);
+  }
 
   // 送られてきた複数の曲（songIds）が、全部自分のものかチェック
   const validSongsCount = await prisma.song.count({
