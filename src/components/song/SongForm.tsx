@@ -4,57 +4,43 @@ import { updateSong, deleteSong } from "@/actions/song";
 import { NOTE_OPTIONS } from "@/lib/noteUtils";
 import { useState } from "react";
 import Link from "next/link";
-import { useFormStatus } from "react-dom";
 import type { Song } from "@/generated/prisma";
-import type { SongSchema } from "@/lib/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { songSchema, type SongSchema } from "@/lib/schema";
 
 type Props = {
   song: Song;
 };
 
-function SubmitButton({ isInvalid }: { isInvalid: boolean }) {
-  const { pending } = useFormStatus();
-
-  return (
-    <button
-      type="submit"
-      disabled={isInvalid || pending}
-      className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold transition-colors shadow-md ${
-        isInvalid || pending
-          ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
-          : "bg-primary text-primary-foreground hover:bg-primary-hover"
-      }`}
-    >
-      {pending ? "更新中..." : "更新する"}
-    </button>
-  );
-}
-
 export default function EditSongForm({ song }: Props) {
-  const [minNoteId, setMinNoteId] = useState<number | null>(song.minNoteId);
-  const [maxNoteId, setMaxNoteId] = useState<number | null>(song.maxNoteId);
   const [serverError, setServerError] = useState("");
 
-  const isInvalid =
-    minNoteId !== null && maxNoteId !== null && minNoteId > maxNoteId;
+  // RHF + Zod のセットアップ
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isValid, isSubmitting },
+  } = useForm<SongSchema>({
+    resolver: zodResolver(songSchema),
+    defaultValues: {
+      title: song.title,
+      artist: song.artist,
+      youtubeUrl: song.youtubeUrl || "",
+      status: song.status as SongSchema["status"],
+      minNoteId: song.minNoteId,
+      maxNoteId: song.maxNoteId,
+      memo: song.memo || "",
+    },
+    mode: "onChange",
+  });
 
-  const handleUpdate = async (formData: FormData) => {
+  // 送信処理（Zodを通った安全なデータだけがくる）
+  const onSubmit = async (data: SongSchema) => {
     setServerError("");
 
-    const rawMinNoteId = formData.get("minNoteId");
-    const rawMaxNoteId = formData.get("maxNoteId");
-
-    const dataToUpdate: SongSchema = {
-      title: formData.get("title") as string,
-      artist: formData.get("artist") as string,
-      youtubeUrl: (formData.get("youtubeUrl") as string) || undefined,
-      status: formData.get("status") as SongSchema["status"],
-      minNoteId: rawMinNoteId === "" ? null : Number(rawMinNoteId),
-      maxNoteId: rawMaxNoteId === "" ? null : Number(rawMaxNoteId),
-      memo: (formData.get("memo") as string) || undefined,
-    };
-
-    const result = await updateSong(song.id, dataToUpdate);
+    const result = await updateSong(song.id, data);
+    
     if (result?.error) {
       setServerError(result.error);
     }
@@ -72,7 +58,7 @@ export default function EditSongForm({ song }: Props) {
 
   return (
     <form
-      action={handleUpdate}
+      onSubmit={handleSubmit(onSubmit)}
       className="bg-card p-6 rounded-xl shadow-sm border border-border space-y-6 transition-colors"
     >
       <div>
@@ -80,12 +66,16 @@ export default function EditSongForm({ song }: Props) {
           曲名 <span className="text-red-500">*</span>
         </label>
         <input
-          name="title"
+          {...register("title")}
           type="text"
-          required
-          defaultValue={song.title}
-          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground"
+          className={`w-full bg-background text-foreground border rounded-lg px-4 py-2 focus:ring-2 outline-none transition-colors placeholder:text-muted-foreground
+            ${errors.title ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-ring"}`}
         />
+        {errors.title && (
+          <p className="text-red-500 text-xs mt-1 font-bold">
+            {errors.title.message}
+          </p>
+        )}
       </div>
 
       <div>
@@ -93,12 +83,16 @@ export default function EditSongForm({ song }: Props) {
           アーティスト <span className="text-red-500">*</span>
         </label>
         <input
-          name="artist"
+          {...register("artist")}
           type="text"
-          required
-          defaultValue={song.artist}
-          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground"
+          className={`w-full bg-background text-foreground border rounded-lg px-4 py-2 focus:ring-2 outline-none transition-colors placeholder:text-muted-foreground
+            ${errors.artist ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-ring"}`}
         />
+        {errors.artist && (
+          <p className="text-red-500 text-xs mt-1 font-bold">
+            {errors.artist.message}
+          </p>
+        )}
       </div>
 
       <div>
@@ -106,11 +100,16 @@ export default function EditSongForm({ song }: Props) {
           YouTube URL
         </label>
         <input
-          name="youtubeUrl"
+          {...register("youtubeUrl")}
           type="url"
-          defaultValue={song.youtubeUrl || ""}
-          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none transition-colors placeholder:text-muted-foreground"
+          className={`w-full bg-background text-foreground border rounded-lg px-4 py-2 focus:ring-2 outline-none transition-colors placeholder:text-muted-foreground
+            ${errors.youtubeUrl ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-ring"}`}
         />
+        {errors.youtubeUrl && (
+          <p className="text-red-500 text-xs mt-1 font-bold">
+            {errors.youtubeUrl.message}
+          </p>
+        )}
       </div>
 
       <div>
@@ -120,36 +119,40 @@ export default function EditSongForm({ song }: Props) {
         <div className="flex flex-col sm:flex-row gap-4 text-foreground">
           <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-blue-50 dark:has-checked:bg-blue-900/20 has-checked:border-blue-300 dark:has-checked:border-blue-700">
             <input
+              {...register("status")}
               type="radio"
-              name="status"
               value="PRACTICING"
-              defaultChecked={song.status === "PRACTICING"}
               className="accent-blue-500"
             />
             <span className="font-bold">🔰 練習中</span>
           </label>
           <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-green-50 dark:has-checked:bg-green-900/20 has-checked:border-green-300 dark:has-checked:border-green-700">
             <input
+              {...register("status")}
               type="radio"
-              name="status"
               value="LEARNED"
-              defaultChecked={song.status === "LEARNED"}
               className="accent-green-500"
             />
             <span className="font-bold">🎤 持ち歌</span>
           </label>
           <label className="flex-1 flex items-center gap-2 cursor-pointer border border-border p-3 rounded-lg hover:bg-muted transition-colors has-checked:bg-primary/10 has-checked:border-primary/50">
             <input
+              {...register("status")}
               type="radio"
-              name="status"
               value="MASTERED"
-              defaultChecked={song.status === "MASTERED"}
               className="accent-primary"
             />
             <span className="font-bold">👑 十八番</span>
           </label>
         </div>
       </div>
+
+      {/* 共通の音域エラー表示 */}
+      {errors.minNoteId && (
+        <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
+          ⚠️ {errors.minNoteId.message}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -158,15 +161,9 @@ export default function EditSongForm({ song }: Props) {
           </label>
           <div className="relative">
             <select
-              name="minNoteId"
-              value={minNoteId === null ? "" : minNoteId}
-              onChange={(e) =>
-                setMinNoteId(
-                  e.target.value === "" ? null : Number(e.target.value),
-                )
-              }
+              {...register("minNoteId")}
               className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
-                isInvalid
+                errors.minNoteId
                   ? "border-red-500 bg-red-50 dark:bg-red-900/20"
                   : "border-border bg-background"
               }`}
@@ -196,15 +193,9 @@ export default function EditSongForm({ song }: Props) {
           </label>
           <div className="relative">
             <select
-              name="maxNoteId"
-              value={maxNoteId === null ? "" : maxNoteId}
-              onChange={(e) =>
-                setMaxNoteId(
-                  e.target.value === "" ? null : Number(e.target.value),
-                )
-              }
+              {...register("maxNoteId")}
               className={`w-full border rounded-lg px-4 py-2 appearance-none outline-none cursor-pointer text-foreground transition-colors ${
-                isInvalid
+                errors.minNoteId
                   ? "border-red-500 bg-red-50 dark:bg-red-900/20"
                   : "border-border bg-background"
               }`}
@@ -234,18 +225,17 @@ export default function EditSongForm({ song }: Props) {
           メモ
         </label>
         <textarea
-          name="memo"
+          {...register("memo")}
           rows={4}
-          defaultValue={song.memo || ""}
-          className="w-full bg-background text-foreground border border-border rounded-lg px-4 py-2 focus:ring-2 focus:ring-ring outline-none resize-none transition-colors placeholder:text-muted-foreground"
+          className={`w-full bg-background text-foreground border rounded-lg px-4 py-2 focus:ring-2 outline-none resize-none transition-colors placeholder:text-muted-foreground
+            ${errors.memo ? "border-red-500 focus:ring-red-500" : "border-border focus:ring-ring"}`}
         />
+        {errors.memo && (
+          <p className="text-red-500 text-xs mt-1 font-bold">
+            {errors.memo.message}
+          </p>
+        )}
       </div>
-
-      {isInvalid && (
-        <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
-          ⚠️ 最低音が最高音より高くなっています。修正してください。
-        </div>
-      )}
 
       {serverError && (
         <div className="text-red-500 dark:text-red-400 text-sm font-bold bg-red-50 dark:bg-red-900/20 p-3 rounded-lg text-center border border-red-200 dark:border-red-800/50">
@@ -265,11 +255,21 @@ export default function EditSongForm({ song }: Props) {
         <div className="flex gap-3 w-full sm:w-auto">
           <Link
             href={`/songs/${song.id}`}
-            className="flex-1 sm:flex-none text-center px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors font-bold"
+            className="flex-1 sm:flex-none flex items-center justify-center px-4 py-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors font-bold"
           >
             キャンセル
           </Link>
-          <SubmitButton isInvalid={isInvalid} />
+          <button
+            type="submit"
+            disabled={!isValid || isSubmitting}
+            className={`flex-1 sm:flex-none px-6 py-2 rounded-lg font-bold transition-colors shadow-md ${
+              !isValid || isSubmitting
+                ? "bg-muted text-muted-foreground cursor-not-allowed opacity-70"
+                : "bg-primary text-primary-foreground hover:bg-primary-hover"
+            }`}
+          >
+            {isSubmitting ? "更新中..." : "更新する"}
+          </button>
         </div>
       </div>
     </form>
