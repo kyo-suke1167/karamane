@@ -24,7 +24,8 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
   const [items, setItems] = useState(setlist.entries);
   const [isPending, startTransition] = useTransition();
 
-  // ドラッグ＆ドロップのセンサー設定
+  const [hasChanges, setHasChanges] = useState(false);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -33,6 +34,20 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
   );
 
   const toggleEditMode = () => {
+    if (isEditMode) {
+      if (hasChanges) {
+        const updates = items.map((item, index) => ({
+          id: item.id,
+          order: index,
+        }));
+
+        startTransition(async () => {
+          await reorderSetlist(updates);
+          router.refresh();
+        });
+        setHasChanges(false);
+      }
+    }
     setIsEditMode(!isEditMode);
     setSelectedIds([]);
   };
@@ -49,16 +64,9 @@ export function useSetlistDetail(setlist: SetlistWithRelations) {
       const oldIndex = items.findIndex((i) => i.id === active.id);
       const newIndex = items.findIndex((i) => i.id === over.id);
       const newItems = arrayMove(items, oldIndex, newIndex);
+      
       setItems(newItems);
-
-      const updates = newItems.map((item, index) => ({
-        id: item.id,
-        order: index,
-      }));
-
-      startTransition(async () => {
-        await reorderSetlist(updates);
-      });
+      setHasChanges(true);
     }
   };
 

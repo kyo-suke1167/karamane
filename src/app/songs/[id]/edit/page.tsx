@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import EditSongForm from "@/components/song/SongForm";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -12,10 +14,22 @@ export default async function EditSongPage({ params }: Props) {
 
   if (isNaN(songId)) return notFound();
 
-  const song = await prisma.song.findUnique({
-    where: { id: songId },
+  const session = await getServerSession(authOptions);
+  
+  // ログインしていなければログイン画面へ強制送還
+  if (!session?.user?.email) {
+    redirect("/login");
+  }
+
+  // IDOR対策: 自分の曲しか編集画面を開けないようにする
+  const song = await prisma.song.findFirst({
+    where: { 
+      id: songId,
+      user: { email: session.user.email }
+    },
   });
 
+  // 曲がない、または他人の曲なら404
   if (!song) return notFound();
 
   return (

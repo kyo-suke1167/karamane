@@ -1,11 +1,11 @@
 import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation"; // 🌟 追加：ルーターを呼び出す！
+import { useRouter } from "next/navigation";
 import { fetchYoutubePlaylist, saveImportedSongs } from "@/actions/youtube";
 import { SongStatus } from "@/generated/prisma";
 import type { PreviewSong } from "@/types";
 
 export function useYoutubeImport() {
-  const router = useRouter(); // 🌟 追加：画面遷移用の魔法の杖！
+  const router = useRouter();
 
   const [url, setUrl] = useState("");
   const [error, setError] = useState("");

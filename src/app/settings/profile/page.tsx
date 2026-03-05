@@ -10,11 +10,22 @@ export default async function ProfileSettingsPage() {
   if (!session || !session.user) {
     redirect("/login");
   }
-
-  // 最新のユーザー情報と連携済みアカウント情報を取得
+  
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    include: { accounts: true },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      minNoteId: true,
+      maxNoteId: true,
+      accounts: {
+        select: {
+          provider: true,
+        },
+      },
+    },
   });
 
   if (!user) {

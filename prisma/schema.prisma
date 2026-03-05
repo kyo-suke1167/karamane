@@ -80,6 +80,7 @@ model Song {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   @@map("songs")
+  @@index([userId])
 }
 
 // ==========================================
@@ -101,6 +102,7 @@ model Setlist {
   updatedAt     DateTime  @updatedAt @map("updated_at")
 
   @@map("setlists")
+  @@index([userId])
 }
 
 // ==========================================
@@ -150,6 +152,8 @@ model SingingRecord {
   updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("singing_records")
+  @@index([userId])
+  @@index([songId])
 }
 
 // ==========================================
