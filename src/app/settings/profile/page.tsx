@@ -3,6 +3,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import ProfileForm from "@/components/profile/ProfileForm";
+import SharePortalCard from "@/components/profile/SharePortalCard";
 
 export default async function ProfileSettingsPage() {
   const session = await getServerSession(authOptions);
@@ -48,7 +49,13 @@ export default async function ProfileSettingsPage() {
         プロフィールや音域を変更できます
       </p>
 
-      <ProfileForm user={user} isLinkedWithGoogle={isLinkedWithGoogle} />
+      <div className="space-y-8">
+        {/* シェア用カード */}
+        <SharePortalCard userId={user.id} userName={user.name} />
+
+        {/* 既存のプロフィールフォーム */}
+        <ProfileForm user={user} isLinkedWithGoogle={isLinkedWithGoogle} />
+      </div>
     </div>
   );
 }

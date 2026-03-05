@@ -8,7 +8,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signupSchema, type SignupSchema } from "@/lib/schema";
 import { signIn } from "next-auth/react";
-import GoogleIcon from "@/components/ui/GoogleIcon";
+import { GoogleIcon } from "@/components/ui/Icons";
 
 export default function SignupPage() {
   const router = useRouter();

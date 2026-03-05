@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import GoogleIcon from "@/components/ui/GoogleIcon";
+import { GoogleIcon } from "@/components/ui/Icons";
 
 function LoginContent() {
   const router = useRouter();
