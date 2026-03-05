@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "next-themes";
+import { CheckIcon, CopyIcon, XIcon, SunIcon, MoonIcon } from "@/components/ui/Icons";
 
 type Props = {
   user: {
@@ -23,7 +24,7 @@ export default function PublicHeader({ user, songCount }: Props) {
   const [currentUrl, setCurrentUrl] = useState("");
   const [isUrlCopied, setIsUrlCopied] = useState(false);
   
-  // 🌟 トースト通知用の状態とタイマー
+  // トースト通知用の状態とタイマー
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const toastTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -56,7 +57,7 @@ export default function PublicHeader({ user, songCount }: Props) {
       await navigator.clipboard.writeText(currentUrl);
       setIsUrlCopied(true);
       
-      // 🌟 トースト通知を表示
+      // トースト通知を表示
       setToastMessage("ポータルのURLをコピーしました！");
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       toastTimeoutRef.current = setTimeout(() => {
@@ -93,22 +94,14 @@ export default function PublicHeader({ user, songCount }: Props) {
               </p>
             </div>
 
-            {/* 🌙 テーマ切り替えボタン */}
+            {/* テーマ切り替えボタン */}
             {mounted && (
               <button
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
                 className="p-1.5 text-muted-foreground hover:text-primary hover:bg-muted rounded-full transition-colors shrink-0"
                 aria-label="テーマ切り替え"
               >
-                {theme === "dark" ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" />
-                  </svg>
-                )}
+                {theme === "dark" ? <SunIcon className="w-4 h-4" /> : <MoonIcon className="w-4 h-4" />}
               </button>
             )}
           </div>
@@ -125,15 +118,7 @@ export default function PublicHeader({ user, songCount }: Props) {
                   aria-label="URLをコピー"
                   title="URLをコピー"
                 >
-                  {isUrlCopied ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-green-500">
-                      <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-                    </svg>
-                  )}
+                  {isUrlCopied ? <CheckIcon className="w-4 h-4 text-green-500" /> : <CopyIcon className="w-4 h-4" />}
                 </button>
 
                 {/* 𝕏 X（Twitter）シェアボタン */}
@@ -145,9 +130,7 @@ export default function PublicHeader({ user, songCount }: Props) {
                   aria-label="Xでシェア"
                   title="Xでシェア"
                 >
-                  <svg viewBox="0 0 24 24" aria-hidden="true" className="w-4 h-4 fill-current">
-                    <g><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.008 4.976H5.078z"></path></g>
-                  </svg>
+                  <XIcon className="w-4 h-4" />
                 </a>
               </>
             )}
@@ -168,9 +151,7 @@ export default function PublicHeader({ user, songCount }: Props) {
       {toastMessage && (
         <div className="fixed top-16 left-1/2 -translate-x-1/2 z-100 animate-in fade-in slide-in-from-top-5 duration-300 pointer-events-none">
           <div className="bg-foreground text-background px-4 py-2.5 sm:px-5 sm:py-3 rounded-full shadow-2xl text-[11px] sm:text-xs font-bold flex items-center gap-2 max-w-[90vw] truncate">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 text-green-400 shrink-0">
-              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
-            </svg>
+            <CheckIcon className="w-4 h-4 text-green-400 shrink-0" />
             <span className="truncate">{toastMessage}</span>
           </div>
         </div>

@@ -49,7 +49,7 @@ export default function PublicSongList({ songs }: { songs: PublicSong[] }) {
       await navigator.clipboard.writeText(textToCopy);
       setCopiedId(song.id);
       
-      setToastMessage(`「${song.title}」をコピーしました！`);
+      setToastMessage(`「${song.title} / ${song.artist}」をコピーしました！`);
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       toastTimeoutRef.current = setTimeout(() => {
         setCopiedId(null);

@@ -17,13 +17,19 @@ const YOUTUBE_MAX_PAGES = 20; // プレイリスト取得の最大ページ数
 const importSongSchema = z.object({
   title: z.string().min(1, "タイトルは必須です"),
   artist: z.string().min(1, "アーティスト名は必須です"),
-  youtubeUrl: z.string().url("無効なURLです"),
+  youtubeUrl: z.preprocess(
+    (val) => (val === "" ? null : val),
+    z.string().url("無効なURLです").nullable().optional()
+  ),
   status: z.nativeEnum(SongStatus),
   key: z.number().int(),
-  memo: z.string(),
+  memo: z.string().nullable().optional(),
 });
 
 const importSongsArraySchema = z.array(importSongSchema);
+
+// Zod スキーマから型を自動生成
+type ImportSongData = z.infer<typeof importSongSchema>;
 
 // ==========================================
 // 型定義
@@ -184,15 +190,6 @@ export async function fetchYoutubeVideo(url: string) {
   }
 }
 
-type ImportSongData = {
-  title: string;
-  artist: string;
-  youtubeUrl: string;
-  status: SongStatus;
-  key: number;
-  memo: string;
-};
-
 export async function saveImportedSongs(
   songs: ImportSongData[],
   setlistTitle?: string,
@@ -205,6 +202,11 @@ export async function saveImportedSongs(
   }
 
   if (songs.length === 0) return { error: "保存する曲がありません" };
+
+  // 同時にセットリストを作成する場合のみ、100曲制限をかける
+  if (setlistTitle && songs.length > 100) {
+    return { error: "セットリストと一緒に作成する場合、一度にインポートできるのは100曲までです。100曲以上インポートする場合は「同時にセットリストを作成する」のチェックを外してください。" };
+  }
 
   // クライアントから送られてきたデータをZodで厳密にチェック
   const validationResult = importSongsArraySchema.safeParse(songs);
@@ -219,10 +221,10 @@ export async function saveImportedSongs(
       data: validSongs.map((song) => ({
         title: song.title,
         artist: song.artist,
-        youtubeUrl: song.youtubeUrl,
+        youtubeUrl: song.youtubeUrl || null,
         status: song.status,
         key: song.key,
-        memo: song.memo,
+        memo: song.memo || null,
         userId,
       })),
     });
@@ -231,7 +233,7 @@ export async function saveImportedSongs(
       const setlist = await prisma.setlist.create({
         data: {
           title: setlistTitle,
-          description: "YouTubeからインポート",
+          description: "一括インポートで作成",
           userId,
         },
       });

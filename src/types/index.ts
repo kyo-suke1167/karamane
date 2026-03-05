@@ -39,9 +39,9 @@ export type PreviewSong = {
   selected: boolean;
   title: string;
   artist: string;
-  youtubeUrl: string;
+  youtubeUrl: string | null;
   status: SongStatus;
   key: number;
-  memo: string;
+  memo: string | null;
   isDuplicate?: boolean;
 };

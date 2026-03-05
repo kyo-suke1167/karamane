@@ -1,7 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { YoutubeImport } from "@/components/song/YoutubeImport";
+import { ImportScreen } from "@/components/song/ImportScreen";
 
 export default async function YoutubeImportPage() {
   const session = await getServerSession(authOptions);
@@ -9,7 +9,7 @@ export default async function YoutubeImportPage() {
 
   return (
     <div className="max-w-4xl mx-auto py-8 px-4 pb-20">
-      <YoutubeImport />
+      <ImportScreen />
     </div>
   );
 }

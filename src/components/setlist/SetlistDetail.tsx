@@ -180,6 +180,7 @@ export function SetlistDetail({
         allSongs={allSongs}
         onAdd={handleBulkAddSongs}
         isPending={isPending}
+        currentCount={items.length} 
       />
     </div>
   );
